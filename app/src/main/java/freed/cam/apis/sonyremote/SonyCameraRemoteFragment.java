@@ -20,6 +20,7 @@
 package freed.cam.apis.sonyremote;
 
 import android.os.Bundle;
+import android.os.HandlerThread;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -49,7 +50,7 @@ import freed.cam.apis.sonyremote.sonystuff.SimpleRemoteApi;
 import freed.cam.apis.sonyremote.sonystuff.SimpleStreamSurfaceView;
 import freed.cam.apis.sonyremote.sonystuff.SonyUtils;
 import freed.cam.apis.sonyremote.sonystuff.WifiHandler;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 
 /**
@@ -71,13 +72,21 @@ public class SonyCameraRemoteFragment extends CameraFragmentAbstract implements 
     private SimpleCameraEventObserver mEventObserver;
     private final Set<String> mAvailableCameraApiSet = new HashSet<>();
 
+    public static SonyCameraRemoteFragment getInstance(HandlerThread mBackgroundThread, Object cameraLock)
+    {
+        SonyCameraRemoteFragment fragment = new SonyCameraRemoteFragment();
+        fragment.init(mBackgroundThread, cameraLock);
+        return fragment;
+    }
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
         super.onCreateView(inflater, container, savedInstanceState);
         view = inflater.inflate(layout.cameraholdersony, container, false);
         surfaceView = (SimpleStreamSurfaceView) view.findViewById(id.view);
-        surfaceView.SetRenderScriptHandlerAndInterface(renderScriptHandler, (ActivityInterface) getActivity());
+        surfaceView.SetRenderScriptHandlerAndInterface(renderScriptManager, (ActivityInterface) getActivity());
 
         textView_wifi =(TextView) view.findViewById(id.textView_wificonnect);
 
@@ -405,11 +414,6 @@ public class SonyCameraRemoteFragment extends CameraFragmentAbstract implements 
 
     }
 
-    @Override
-    public void startWork() {
-        moduleHandler.startWork();
-    }
-
     public void stopEventObserver()
     {
         mEventObserver.stop();
@@ -444,7 +448,7 @@ public class SonyCameraRemoteFragment extends CameraFragmentAbstract implements 
 
     @Override
     public String getResString(int id) {
-        return getAppSettingsManager().getResString(id);
+        return AppSettingsManager.getInstance().getResString(id);
     }
 
     @Override

@@ -32,6 +32,7 @@ import java.io.File;
 import freed.ActivityInterface.I_OnActivityResultCallback;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.parameters.modes.SDModeParameter;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 import freed.utils.StringUtils;
 
@@ -40,8 +41,6 @@ import freed.utils.StringUtils;
  */
 public class SettingsChildMenuSDSave extends SettingsChildMenu implements I_OnActivityResultCallback
 {
-    final String internal = "Internal";
-    final String external ="External";
     private String lastval;
 
     public SettingsChildMenuSDSave(Context context, int headerid, int descriptionid) {
@@ -76,7 +75,7 @@ public class SettingsChildMenuSDSave extends SettingsChildMenu implements I_OnAc
                 lastval = value;
                 fragment_activityInterface.ChooseSDCard(this);
             } else {
-                fragment_activityInterface.getAppSettings().SetWriteExternal(false);
+                AppSettingsManager.getInstance().SetWriteExternal(false);
                 onStringValueChanged(value);
             }
         }
@@ -101,14 +100,14 @@ public class SettingsChildMenuSDSave extends SettingsChildMenu implements I_OnAc
                 Log.WriteEx(ex);
             }
             if (canWriteExternal) {
-                fragment_activityInterface.getAppSettings().SetWriteExternal(true);
+                AppSettingsManager.getInstance().SetWriteExternal(true);
                 onStringValueChanged(SDModeParameter.external);
             } else {
                 Toast.makeText(getContext(), "Cant write to External SD, pls insert SD or apply SD fix", Toast.LENGTH_LONG).show();
                 onStringValueChanged(SDModeParameter.internal);
             }
         } else {
-            fragment_activityInterface.getAppSettings().SetWriteExternal(false);
+            AppSettingsManager.getInstance().SetWriteExternal(false);
             onStringValueChanged(value);
         }
     }
@@ -125,12 +124,12 @@ public class SettingsChildMenuSDSave extends SettingsChildMenu implements I_OnAc
         DocumentFile f = DocumentFile.fromTreeUri(getContext(), uri);
         if (f.canWrite() && lastval.equals(SDModeParameter.external))
         {
-            fragment_activityInterface.getAppSettings().SetWriteExternal(true);
+            AppSettingsManager.getInstance().SetWriteExternal(true);
             onStringValueChanged(SDModeParameter.external);
         }
         else
         {
-            fragment_activityInterface.getAppSettings().SetWriteExternal(false);
+            AppSettingsManager.getInstance().SetWriteExternal(false);
             onStringValueChanged(SDModeParameter.internal);
         }
         lastval = "";

@@ -20,6 +20,7 @@
 package freed.cam.ui.themesample.settings.childs;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,7 +32,7 @@ import com.troop.freedcam.R.id;
 import com.troop.freedcam.R.layout;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 
 /**
  * Created by Ar4eR on 05.02.16.
@@ -45,12 +46,9 @@ public class SettingsChildMenuAEB extends LinearLayout {
     private int current;
     private CameraWrapperInterface cameraUiWrapper;
     private String settingsname;
-    private AppSettingsManager appSettingsManager;
 
-
-    public SettingsChildMenuAEB(Context context,AppSettingsManager appSettingsManager) {
+    public SettingsChildMenuAEB(Context context) {
         super(context);
-        this.appSettingsManager = appSettingsManager;
         init(context);
     }
 
@@ -113,17 +111,16 @@ public class SettingsChildMenuAEB extends LinearLayout {
 
     private void setCurrent(int current) {
         String tempcurrent = String.valueOf(current);
-        appSettingsManager.setApiString(settingsname, tempcurrent);
+        AppSettingsManager.getInstance().setApiString(settingsname, tempcurrent);
     }
 
-    public void SetStuff(AppSettingsManager appSettingsManager, String settingvalue) {
+    public void SetStuff(String settingvalue) {
 
         settingsname = settingvalue;
-        this.appSettingsManager = appSettingsManager;
         String exp="";
-        if (appSettingsManager != null)
-        exp = appSettingsManager.getApiString(settingsname);
-        if (exp == null || exp.equals("")) {
+        if (AppSettingsManager.getInstance() != null)
+        exp = AppSettingsManager.getInstance().getApiString(settingsname);
+        if (exp == null || TextUtils.isEmpty(exp)) {
             exp = "0";
             current = Integer.parseInt(exp);
             setCurrent(current);

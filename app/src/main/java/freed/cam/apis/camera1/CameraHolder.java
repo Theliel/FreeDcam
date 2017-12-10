@@ -47,7 +47,7 @@ import freed.utils.Log;
 public class CameraHolder extends CameraHolderAbstract
 {
     //frame count that get attached to the camera when using focuspeak
-    final int BUFFERCOUNT = 3;
+    public static final int BUFFERCOUNT = 5;
     //camera object
     protected Camera mCamera;
 
@@ -92,12 +92,20 @@ public class CameraHolder extends CameraHolderAbstract
         {
             Log.d(TAG, "open camera");
             mCamera = Camera.open(camera);
+            mCamera.setErrorCallback(new Camera.ErrorCallback() {
+                @Override
+                public void onError(int error, Camera camera) {
+                    Log.e(TAG, "Error:" + error);
+                }
+            });
             isRdy = true;
             cameraUiWrapper.onCameraOpen("");
 
         } catch (Exception ex) {
             isRdy = false;
             Log.WriteEx(ex);
+            if (mCamera != null)
+                mCamera.release();
         }
         return isRdy;
     }
@@ -209,7 +217,6 @@ public class CameraHolder extends CameraHolderAbstract
 
         } catch (Exception ex)
         {
-            cameraUiWrapper.onPreviewClose("");
             Log.d(TAG, "Camera was released");
             Log.WriteEx(ex);
         }
@@ -217,7 +224,14 @@ public class CameraHolder extends CameraHolderAbstract
 
     public Parameters GetCameraParameters()
     {
-        return mCamera.getParameters();
+        try {
+            return mCamera.getParameters();
+        }catch (NullPointerException ex)
+        {
+            return null;
+        }
+
+
     }
 
     public void TakePicture(PictureCallback picture)
@@ -261,6 +275,11 @@ public class CameraHolder extends CameraHolderAbstract
         catch (NullPointerException ex)
         {
             Log.e(TAG,ex.getMessage());
+        }
+        catch (RuntimeException ex)
+        {
+            Log.d(TAG, "Camera was released");
+            Log.WriteEx(ex);
         }
 
     }

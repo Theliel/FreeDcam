@@ -26,11 +26,9 @@ import android.os.Handler;
 
 import com.troop.freedcam.R;
 
-import java.io.File;
-
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.modules.ModuleHandlerAbstract;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 
 /**
  * Created by troop on 18.08.2016.
@@ -49,8 +47,6 @@ public class AfBracketApi2 extends PictureModuleApi2
     private int currentFocusPos;
     private int focuslength;
     private int min;
-    private File[] savedFiles;
-    private int currentFileCount;
 
     @Override
     public String ShortName() {
@@ -81,15 +77,10 @@ public class AfBracketApi2 extends PictureModuleApi2
     @Override
     protected void onStartTakePicture() {
         super.onStartTakePicture();
-        if (mrawImageReader != null)
-            savedFiles = new File[PICSTOTAKE*2];
-        else
-            savedFiles = new File[PICSTOTAKE];
-        currentFileCount = 0;
         int max  = 0;
         try {
-            min = Integer.parseInt(appSettingsManager.getApiString(AppSettingsManager.SETTING_AFBRACKETMIN));
-            max = Integer.parseInt(appSettingsManager.getApiString(AppSettingsManager.SETTING_AFBRACKETMAX));
+            min = Integer.parseInt(AppSettingsManager.getInstance().getApiString(AppSettingsManager.SETTING_AFBRACKETMIN));
+            max = Integer.parseInt(AppSettingsManager.getInstance().getApiString(AppSettingsManager.SETTING_AFBRACKETMAX));
         }
         catch (NumberFormatException ex)
         {
@@ -123,13 +114,6 @@ public class AfBracketApi2 extends PictureModuleApi2
     @Override
     protected void finishCapture() {
         super.finishCapture();
-        if (imagecount == PICSTOTAKE)
-            fireOnWorkFinish(savedFiles);
     }
 
-    @Override
-    public void internalFireOnWorkDone(File file)
-    {
-        savedFiles[currentFileCount++] = file;
-    }
 }

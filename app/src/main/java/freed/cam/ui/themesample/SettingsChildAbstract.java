@@ -20,6 +20,7 @@
 package freed.cam.ui.themesample;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
@@ -29,7 +30,7 @@ import freed.ActivityInterface;
 import freed.cam.apis.basecamera.parameters.ParameterEvents;
 import freed.cam.apis.basecamera.parameters.ParameterInterface;
 import freed.cam.ui.themesample.cameraui.childs.UiSettingsChild;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 
 /**
@@ -80,10 +81,6 @@ public abstract class SettingsChildAbstract extends LinearLayout implements Sett
     @Override
     public void SetStuff(AppSettingsManager.SettingMode settingMode) {
         this.settingMode = settingMode;
-        String value = settingMode.get();
-        if (value.equals("") || value == null)
-            value = settingMode.getValues()[0];
-        onStringValueChanged(value);
     }
 
     public SettingsChildAbstract(Context context) {
@@ -151,8 +148,8 @@ public abstract class SettingsChildAbstract extends LinearLayout implements Sett
     {
         if (parameter != null && parameter.IsSupported())
         {
-            if (key_appsettings != null && !key_appsettings.equals(""))
-                fragment_activityInterface.getAppSettings().setApiString(key_appsettings, value);
+            if (key_appsettings != null && !TextUtils.isEmpty(key_appsettings))
+                AppSettingsManager.getInstance().setApiString(key_appsettings, value);
             if (settingMode != null)
                 settingMode.set(value);
             try {

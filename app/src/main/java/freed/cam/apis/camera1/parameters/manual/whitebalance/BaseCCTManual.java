@@ -22,6 +22,7 @@ package freed.cam.apis.camera1.parameters.manual.whitebalance;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.os.Handler;
+import android.text.TextUtils;
 
 import com.troop.freedcam.R;
 
@@ -31,6 +32,7 @@ import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.camera1.CameraHolder;
 import freed.cam.apis.camera1.parameters.ParametersHandler;
 import freed.cam.apis.camera1.parameters.manual.BaseManualParameter;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 
 /**
@@ -45,13 +47,13 @@ public class BaseCCTManual extends BaseManualParameter
 
     public BaseCCTManual(final Parameters parameters,final CameraWrapperInterface cameraUiWrapper) {
         super(parameters, "", "", "", cameraUiWrapper, 0);
-        manual_WbMode = cameraUiWrapper.getAppSettingsManager().manualWhiteBalance.getMode();
-        stringvalues = cameraUiWrapper.getAppSettingsManager().manualWhiteBalance.getValues();
+        manual_WbMode = AppSettingsManager.getInstance().manualWhiteBalance.getMode();
+        stringvalues = AppSettingsManager.getInstance().manualWhiteBalance.getValues();
         isSupported = true;
         isVisible = false;
 
         //wait 800ms to give awb a chance to set the ct value to the parameters
-        if (cameraUiWrapper.getAppSettingsManager().manualWhiteBalance.getKEY().equals(""))
+        if (TextUtils.isEmpty(AppSettingsManager.getInstance().manualWhiteBalance.getKEY()))
             new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -69,7 +71,7 @@ public class BaseCCTManual extends BaseManualParameter
                     wbcur = cameraUiWrapper.getResString(R.string.wb_manual_cct);
                 else if (parameters1.get(cameraUiWrapper.getResString(R.string.manual_wb_value)) != null)
                     wbcur = cameraUiWrapper.getResString(R.string.manual_wb_value);
-                if (wbcur != "")
+                if (!TextUtils.isEmpty(wbcur))
                 {
                     //update our stored parameters with ct
                     parameters.set(wbcur, parameters1.get(wbcur));
@@ -81,7 +83,7 @@ public class BaseCCTManual extends BaseManualParameter
             }
         }, 800);
         else
-            key_value = cameraUiWrapper.getAppSettingsManager().manualWhiteBalance.getKEY();
+            key_value = AppSettingsManager.getInstance().manualWhiteBalance.getKEY();
     }
 
     /**
@@ -101,7 +103,7 @@ public class BaseCCTManual extends BaseManualParameter
 
 
     @Override
-    public void SetValue(int valueToSet) {
+    public void setValue(int valueToSet) {
         currentInt = valueToSet;
         //set to auto
         if (currentInt == 0) {

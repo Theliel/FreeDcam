@@ -32,7 +32,7 @@ import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.modules.ModuleHandlerAbstract.CaptureStates;
 import freed.cam.apis.camera1.parameters.ParametersHandler;
 import freed.jni.RawToDng;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 import freed.utils.StringUtils;
 import freed.utils.StringUtils.FileEnding;
@@ -55,8 +55,8 @@ public class PictureModuleMTK extends PictureModule
         mBackgroundHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (cameraUiWrapper.getAppSettingsManager().getApiString(AppSettingsManager.SETTING_LOCATION).equals(cameraUiWrapper.getResString(R.string.on_)))
-                    cameraHolder.SetLocation(cameraUiWrapper.getActivityInterface().getLocationHandler().getCurrentLocation());
+                if (AppSettingsManager.getInstance().getApiString(AppSettingsManager.SETTING_LOCATION).equals(cameraUiWrapper.getResString(R.string.on_)))
+                    cameraHolder.SetLocation(cameraUiWrapper.getActivityInterface().getLocationManager().getCurrentLocation());
 
                 cameraUiWrapper.getParameterHandler().SetPictureOrientation(cameraUiWrapper.getActivityInterface().getOrientation());
                 Log.d(TAG, "Start Take Picture");
@@ -87,7 +87,8 @@ public class PictureModuleMTK extends PictureModule
         Log.d(TAG, "HolderFilePath:" + holdFile.getAbsolutePath());
         if (picformat.equals(cameraUiWrapper.getResString(R.string.jpeg_)))
         {
-            saveJpeg(holdFile,data);
+
+            saveJpeg(data,holdFile);
             try {
                 DeviceSwitcher().delete();
             } catch (Exception ex) {
@@ -96,14 +97,13 @@ public class PictureModuleMTK extends PictureModule
         }
         else if (picformat.equals(cameraUiWrapper.getResString(R.string.dng_)))
         {
-            saveJpeg(holdFile,data);
+            saveJpeg(data,holdFile);
             CreateDNG_DeleteRaw();
         }
         else
         {
-            saveJpeg(holdFile,data);
+            saveJpeg(data,holdFile);
         }
-        fireOnWorkFinish(holdFile);
         waitForPicture = false;
         data = null;
         startPreview();
@@ -148,7 +148,6 @@ public class PictureModuleMTK extends PictureModule
         File dng = new File(holdFile.getAbsolutePath().replace(FileEnding.JPG, FileEnding.DNG));
         saveDng(data,dng);
         data = null;
-        fireOnWorkFinish(dng);
     }
 
 

@@ -28,6 +28,7 @@ import com.troop.freedcam.R;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.parameters.AbstractParameter;
 import freed.cam.apis.camera2.CameraHolderApi2;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 import freed.utils.StringFloatArray;
 
@@ -43,10 +44,17 @@ public class ManualFocus extends AbstractParameter
     public ManualFocus(CameraWrapperInterface cameraUiWrapper)
     {
         super(cameraUiWrapper);
-        if (cameraUiWrapper.getAppSettingsManager().manualFocus.isSupported())
+        if (AppSettingsManager.getInstance().manualFocus.isSupported())
         {
             isSupported = true;
-            focusvalues = new StringFloatArray(cameraUiWrapper.getAppSettingsManager().manualFocus.getValues());
+            String[] arr = AppSettingsManager.getInstance().manualFocus.getValues();
+            if (arr == null || arr.length == 0) {
+                isSupported = false;
+                fireIsSupportedChanged(false);
+                Log.d(TAG, "No mf values from Appsettings");
+            }
+            else
+                focusvalues = new StringFloatArray(arr);
             currentInt = 0;
         }
 
@@ -65,7 +73,7 @@ public class ManualFocus extends AbstractParameter
 
 
     @Override
-    public void SetValue(int valueToSet)
+    public void setValue(int valueToSet)
     {
         currentInt = valueToSet;
         if(valueToSet == 0)
@@ -80,17 +88,13 @@ public class ManualFocus extends AbstractParameter
                 ((CameraHolderApi2) cameraUiWrapper.getCameraHolder()).captureSessionHandler.SetParameterRepeating(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_CANCEL);
                 cameraUiWrapper.getParameterHandler().FocusMode.SetValue(cameraUiWrapper.getContext().getString(R.string.off), true);
             }
+            if (currentInt > focusvalues.getSize())
+                currentInt = focusvalues.getSize() -1;
             float valtoset= focusvalues.getValue(currentInt);
             Log.d(TAG, "Set MF TO: " + valtoset+ " ValueTOSET: " + valueToSet);
             ((CameraHolderApi2) cameraUiWrapper.getCameraHolder()).captureSessionHandler.SetParameterRepeating(CaptureRequest.LENS_FOCUS_DISTANCE, valtoset);
         }
     }
-
-    @Override
-    public void SetValue(String valueToSet, boolean setToCamera) {
-
-    }
-
 
     @Override
     public boolean IsSupported()

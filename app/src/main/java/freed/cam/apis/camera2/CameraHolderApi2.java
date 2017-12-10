@@ -23,6 +23,7 @@ import android.Manifest.permission;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Point;
 import android.hardware.Camera.Parameters;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -55,6 +56,7 @@ import java.util.List;
 import freed.cam.apis.basecamera.CameraHolderAbstract;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.FocusEvents;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 import freed.utils.StringUtils;
 
@@ -268,7 +270,7 @@ public class CameraHolderApi2 extends CameraHolderAbstract
     public <T> void SetFocusArea(@NonNull Key<T> key, T value)
     {
         captureSessionHandler.SetParameter(key,null);
-        captureSessionHandler.SetParameter(CaptureRequest.CONTROL_AF_TRIGGER,CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);
+        /*captureSessionHandler.SetParameter(CaptureRequest.CONTROL_AF_TRIGGER,CameraMetadata.CONTROL_AF_TRIGGER_CANCEL);*/
         Log.d(TAG, "Set :" + key.getName() + " to " + value);
         captureSessionHandler.SetParameter(key,value);
         captureSessionHandler.SetParameter(CaptureRequest.CONTROL_AF_TRIGGER,CameraMetadata.CONTROL_AF_TRIGGER_START);
@@ -373,7 +375,7 @@ public class CameraHolderApi2 extends CameraHolderAbstract
         {
             if (result == null)
                 return;
-            if (appSettingsManager.useHuaweiCam2Extension.getBoolean())
+            if (AppSettingsManager.getInstance().useHuaweiCam2Extension.getBoolean())
             {
                 if (cameraUiWrapper.getParameterHandler().ManualShutter.GetValue() == 0) {
                     Long expoTime = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
@@ -537,29 +539,33 @@ public class CameraHolderApi2 extends CameraHolderAbstract
     }
 
 
-    public Size getSizeForPreviewDependingOnImageSize(Size[] choices, CameraCharacteristics characteristics, int mImageWidth, int mImageHeight)
+    public Size getSizeForPreviewDependingOnImageSize(int imageformat, int mImageWidth, int mImageHeight)
     {
         List<Size> sizes = new ArrayList<>();
+        Size[] choices = map.getOutputSizes(imageformat);
+        Point displaysize = captureSessionHandler.getDisplaySize();
         double ratio = (double)mImageWidth/mImageHeight;
         for (Size s : choices)
         {
             if (s.getWidth() <= MAX_PREVIEW_WIDTH && s.getHeight() <= MAX_PREVIEW_HEIGHT && ratioMatch((double)s.getWidth()/s.getHeight(),ratio))
                 sizes.add(s);
-
         }
         if (sizes.size() > 0) {
             return Collections.max(sizes, new CompareSizesByArea());
         } else {
             Log.e(TAG, "Couldn't find any suitable previewSize size");
+            Size s = choices[0];
+            if (s.getWidth() > displaysize.x && s.getHeight() > displaysize.y)
+                return new Size(displaysize.x, displaysize.y);
             return choices[0];
         }
     }
 
     private boolean ratioMatch(double preview, double image)
     {
-        double rangelimter = 0.01;
+        double rangelimter = 0.1;
 
-        if (preview+rangelimter >= image && preview -rangelimter <= image)
+        if (preview+rangelimter >= image && preview-rangelimter <= image)
             return true;
         else
             return false;

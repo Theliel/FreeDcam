@@ -53,7 +53,7 @@ import freed.cam.ui.themesample.settings.childs.SettingsChildMenuTimeLapseFrames
 import freed.cam.ui.themesample.settings.childs.SettingsChildMenuVideoHDR;
 import freed.cam.ui.themesample.settings.childs.SettingsChildMenuVideoProfile;
 import freed.cam.ui.themesample.settings.childs.SettingsChildMenu_VideoProfEditor;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 
 /**
  * Created by troop on 15.06.2015.
@@ -87,7 +87,7 @@ public class LeftMenuFragment extends AbstractFragment  implements SettingsChild
         settingsChildHolder.removeAllViews();
         if (cameraUiWrapper != null) {
 
-            AppSettingsManager apS = cameraUiWrapper.getAppSettingsManager();
+            AppSettingsManager apS = AppSettingsManager.getInstance();
             AbstractParameterHandler params = cameraUiWrapper.getParameterHandler();
         /*
             VIDEOGROUP
@@ -100,7 +100,7 @@ public class LeftMenuFragment extends AbstractFragment  implements SettingsChild
                 videoProfile.SetUiItemClickListner(this);
                 videoGroup.addView(videoProfile);
 
-                SettingsChildMenuTimeLapseFrames timeLapseFrames = new SettingsChildMenuTimeLapseFrames(getContext(), apS);
+                SettingsChildMenuTimeLapseFrames timeLapseFrames = new SettingsChildMenuTimeLapseFrames(getContext());
                 timeLapseFrames.setVisibility(View.VISIBLE);
                 videoGroup.addView(timeLapseFrames);
 
@@ -168,24 +168,24 @@ public class LeftMenuFragment extends AbstractFragment  implements SettingsChild
                 dngGroup.addView(opcode);
             }
 
-            if (params.bayerformat != null) {
+            if (params.bayerformat != null && params.bayerformat.IsSupported() && apS.rawPictureFormat.isSupported()) {
                 SettingsChildMenu bayerFormatItem = new SettingsChildMenu(getContext(), apS.rawPictureFormat, params.bayerformat, R.string.setting_bayerformat_header, R.string.setting_bayerformat_description);
                 bayerFormatItem.SetUiItemClickListner(this);
                 dngGroup.addView(bayerFormatItem);
             }
-            if (params.matrixChooser != null) {
+            if (params.matrixChooser != null && params.matrixChooser.IsSupported()) {
                 SettingsChildMenu matrixChooser = new SettingsChildMenu(getContext(), apS.matrixset, params.matrixChooser, R.string.setting_matrixchooser_header, R.string.setting_matrixchooser_description);
                 matrixChooser.SetUiItemClickListner(this);
                 dngGroup.addView(matrixChooser);
             }
-            if (params.tonemapChooser != null) {
+            if (params.tonemapChooser != null && params.tonemapChooser.IsSupported()) {
                 SettingsChildMenu matrixChooser = new SettingsChildMenu(getContext(), apS.tonemapProfilesSettings, params.tonemapChooser, R.string.setting_tonemapchooser_header, R.string.setting_tonemapchooser_description);
                 matrixChooser.SetUiItemClickListner(this);
                 dngGroup.addView(matrixChooser);
             }
             if (cameraUiWrapper instanceof Camera2Fragment)
             {
-                SettingsChildMenuForceRawToDng rawToDng = new SettingsChildMenuForceRawToDng(getContext(), R.string.setting_forcerawtodng_header, R.string.setting_forcerawtodng_description, apS);
+                SettingsChildMenuForceRawToDng rawToDng = new SettingsChildMenuForceRawToDng(getContext(), R.string.setting_forcerawtodng_header, R.string.setting_forcerawtodng_description);
                 rawToDng.SetUiItemClickListner(this);
                 dngGroup.addView(rawToDng);
             }
@@ -219,7 +219,7 @@ public class LeftMenuFragment extends AbstractFragment  implements SettingsChild
 
             SettingsChildMenu externalShutter = new SettingsChildMenu(getContext(),R.string.setting_externalshutter_header, R.string.setting_externalshutter_description);
             externalShutter.SetStuff(fragment_activityInterface, "");
-            externalShutter.SetParameter(new ParameterExternalShutter(fragment_activityInterface.getAppSettings()));
+            externalShutter.SetParameter(new ParameterExternalShutter());
             externalShutter.SetUiItemClickListner(this);
             globalSettingGroup.addView(externalShutter);
 
@@ -241,7 +241,7 @@ public class LeftMenuFragment extends AbstractFragment  implements SettingsChild
             menuItemGPS.SetUiItemClickListner(this);
             globalSettingGroup.addView(menuItemGPS);
 
-            SettingsChildMenu guide = new SettingsChildMenu(getContext(),cameraUiWrapper.getAppSettingsManager().guide,cameraUiWrapper.getParameterHandler().GuideList, R.string.setting_guide_header, R.string.setting_guide_description);
+            SettingsChildMenu guide = new SettingsChildMenu(getContext(),AppSettingsManager.getInstance().guide,cameraUiWrapper.getParameterHandler().GuideList, R.string.setting_guide_header, R.string.setting_guide_description);
             guide.SetUiItemClickListner(this);
             globalSettingGroup.addView(guide);
 

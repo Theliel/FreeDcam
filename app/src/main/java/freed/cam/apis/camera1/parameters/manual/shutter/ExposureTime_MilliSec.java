@@ -7,6 +7,7 @@ import com.troop.freedcam.R;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.parameters.AbstractParameter;
 import freed.cam.apis.camera1.parameters.ParametersHandler;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 
 /**
@@ -20,7 +21,7 @@ public class ExposureTime_MilliSec extends AbstractParameter {
 
     public ExposureTime_MilliSec(CameraWrapperInterface cameraUiWrapper, Camera.Parameters parameters) {
         super(cameraUiWrapper);
-        stringvalues = cameraUiWrapper.getAppSettingsManager().manualExposureTime.getValues();
+        stringvalues = AppSettingsManager.getInstance().manualExposureTime.getValues();
         isVisible = true;
         isSupported = true;
         this.parameters = parameters;
@@ -37,7 +38,7 @@ public class ExposureTime_MilliSec extends AbstractParameter {
     }
 
     @Override
-    public void SetValue(int valueToset)
+    public void setValue(int valueToset)
     {
         currentInt = valueToset;
         String shutterstring = stringvalues[currentInt];
@@ -53,20 +54,14 @@ public class ExposureTime_MilliSec extends AbstractParameter {
             float b =  Float.parseFloat(shutterstring);
             float c = b * 1000000;
             shutterstring = Math.round(c)+"";
-            parameters.set(cameraUiWrapper.getAppSettingsManager().manualExposureTime.getKEY(), shutterstring);
+            parameters.set(AppSettingsManager.getInstance().manualExposureTime.getKEY(), shutterstring);
 
         }
         else
         {
-            parameters.set(cameraUiWrapper.getAppSettingsManager().manualExposureTime.getKEY(), "0");
+            parameters.set(AppSettingsManager.getInstance().manualExposureTime.getKEY(), "0");
             Log.d(TAG, "set exposure time to auto");
         }
         ((ParametersHandler) cameraUiWrapper.getParameterHandler()).SetParametersToCamera(parameters);
     }
-
-    @Override
-    public void SetValue(String valueToSet, boolean setToCamera) {
-
-    }
-
 }

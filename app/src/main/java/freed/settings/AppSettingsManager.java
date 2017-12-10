@@ -17,7 +17,7 @@
  * /
  */
 
-package freed.utils;
+package freed.settings;
 
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -27,6 +27,8 @@ import android.text.TextUtils;
 import com.troop.freedcam.BuildConfig;
 import com.troop.freedcam.R;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,6 +36,10 @@ import java.util.Set;
 import freed.dng.CustomMatrix;
 import freed.dng.DngProfile;
 import freed.dng.ToneMapProfile;
+import freed.jni.RawToDng;
+import freed.utils.Log;
+import freed.utils.StringUtils;
+import freed.utils.VideoMediaProfile;
 
 /**
  * Created by troop on 19.08.2014.
@@ -201,6 +207,8 @@ public class AppSettingsManager {
     private HashMap<String, CustomMatrix> matrixes;
     private HashMap<String, ToneMapProfile> tonemapProfiles;
     private LongSparseArray<DngProfile> dngProfileHashMap;
+    private byte[] opcode2;
+    private byte[] opcode3;
 
     private final String FEATUREDETECTED = "featuredetected";
 
@@ -275,96 +283,103 @@ public class AppSettingsManager {
     public static final String SETTING_AFBRACKETMIN = "afbracketmin";
     public static final String SETTINGS_NIGHTOVERLAY = "nighoverlay";
 
-    public final SettingMode pictureFormat;
-    public final SettingMode rawPictureFormat;
-    public final SettingMode pictureSize;
-    public final SettingMode focusMode;
-    public final SettingMode exposureMode;
-    public final SettingMode whiteBalanceMode;
-    public final SettingMode colorMode;
-    public final SettingMode flashMode;
-    public final SettingMode isoMode;
-    public final SettingMode antiBandingMode;
-    public final SettingMode imagePostProcessing;
-    public final SettingMode previewSize;
-    public final SettingMode jpegQuality;
-    public final SettingMode aeBracket;
-    public final SettingMode previewFps;
-    public final SettingMode previewFormat;
-    public final SettingMode sceneMode;
-    public final SettingMode redEyeMode;
-    public final SettingMode lenshade;
-    public final SettingMode zeroshutterlag;
-    public final SettingMode sceneDetectMode;
-    public final SettingMode memoryColorEnhancement;
-    public final SettingMode videoSize;
-    public final SettingMode correlatedDoubleSampling;
-    public final SettingMode opticalImageStabilisation;
-    public final SettingMode videoHDR;
-    public final SettingMode videoHFR;
-    public final SettingMode denoiseMode;
-    public final SettingMode temporal_nr;
-    public final SettingMode temporal_video_nr;
-    public final SettingMode seemore_tonemap;
-    public final SettingMode truepotrait;
-    public final SettingMode optizoom;
-    public final SettingMode chromaflash;
-    public final SettingMode rawdumpinterface;
-    public final SettingMode pdafcontrol;
-    public final SettingMode refocus;
+    public SettingMode pictureFormat;
+    public SettingMode rawPictureFormat;
+    public SettingMode pictureSize;
+    public SettingMode focusMode;
+    public SettingMode exposureMode;
+    public SettingMode whiteBalanceMode;
+    public SettingMode colorMode;
+    public SettingMode flashMode;
+    public SettingMode isoMode;
+    public SettingMode antiBandingMode;
+    public SettingMode imagePostProcessing;
+    public SettingMode previewSize;
+    public SettingMode jpegQuality;
+    public SettingMode aeBracket;
+    public SettingMode previewFps;
+    public SettingMode previewFormat;
+    public SettingMode sceneMode;
+    public SettingMode redEyeMode;
+    public SettingMode lenshade;
+    public SettingMode zeroshutterlag;
+    public SettingMode sceneDetectMode;
+    public SettingMode memoryColorEnhancement;
+    public SettingMode videoSize;
+    public SettingMode correlatedDoubleSampling;
+    public SettingMode opticalImageStabilisation;
+    public SettingMode videoHDR;
+    public SettingMode videoHFR;
+    public SettingMode denoiseMode;
+    public SettingMode temporal_nr;
+    public SettingMode temporal_video_nr;
+    public SettingMode seemore_tonemap;
+    public SettingMode truepotrait;
+    public SettingMode optizoom;
+    public SettingMode chromaflash;
+    public SettingMode rawdumpinterface;
+    public SettingMode pdafcontrol;
+    public SettingMode refocus;
 
-    public final SettingMode controlMode;
-    public final SettingMode edgeMode;
-    public final SettingMode digitalImageStabilisationMode;
-    public final SettingMode hotpixelMode;
-    public final SettingMode aePriorityMode;
-    public final TypeSettingsMode hdrMode;
-    public final SettingMode modules;
-    public final SettingMode nonZslManualMode;
-    public final SettingMode virtualLensfilter;
-    public final TypeSettingsMode nightMode;
-    public final SettingMode videoProfile;
-    public final SettingMode videoStabilisation;
-    public final SettingMode interval;
-    public final SettingMode intervalDuration;
-    public final SettingMode opcode;
-    public final SettingMode matrixset;
-    public final SettingMode sdcardlocation;
-    public final SettingMode colorCorrectionMode;
-    public final SettingMode objectTracking;
-    public final SettingMode toneMapMode;
-    public final SettingMode postviewSize;
-    public final SettingMode zoommode;
-    public final SettingMode scalePreview;
-    public final SettingMode guide;
-    public final SettingMode previewFpsRange;
-    public final SettingMode tonemapProfilesSettings;
+    public SettingMode controlMode;
+    public SettingMode edgeMode;
+    public SettingMode digitalImageStabilisationMode;
+    public SettingMode hotpixelMode;
+    public SettingMode aePriorityMode;
+    public TypeSettingsMode hdrMode;
+    public SettingMode modules;
+    public SettingMode nonZslManualMode;
+    public SettingMode virtualLensfilter;
+    public TypeSettingsMode nightMode;
+    public SettingMode videoProfile;
+    public SettingMode videoStabilisation;
+    public SettingMode interval;
+    public SettingMode intervalDuration;
+    public SettingMode opcode;
+    public SettingMode matrixset;
+    public SettingMode sdcardlocation;
+    public SettingMode colorCorrectionMode;
+    public SettingMode objectTracking;
+    public SettingMode toneMapMode;
+    public SettingMode postviewSize;
+    public SettingMode zoommode;
+    public SettingMode scalePreview;
+    public SettingMode guide;
+    public SettingMode previewFpsRange;
+    public SettingMode tonemapProfilesSettings;
 
-    public final TypeSettingsMode manualFocus;
-    public final SettingMode manualExposureCompensation;
-    public final TypeSettingsMode manualExposureTime;
-    public final TypeSettingsMode manualIso;
-    public final SettingMode manualSaturation;
-    public final SettingMode manualSharpness;
-    public final SettingMode manualBrightness;
-    public final SettingMode manualContrast;
-    public final SettingMode manualFnumber;
-    public final SettingMode manualZoom;
-    public final SettingMode manualBurst;
-    public final SettingMode manualConvergence;
-    public final SettingMode manualFx;
-    public final SettingMode manualProgramShift;
-    public final SettingMode manualPreviewZoom;
+    public TypeSettingsMode manualFocus;
+    public SettingMode manualExposureCompensation;
+    public TypeSettingsMode manualExposureTime;
+    public TypeSettingsMode manualIso;
+    public SettingMode manualSaturation;
+    public SettingMode manualSharpness;
+    public SettingMode manualBrightness;
+    public SettingMode manualContrast;
+    public SettingMode manualFnumber;
+    public SettingMode manualZoom;
+    public SettingMode manualBurst;
+    public SettingMode manualConvergence;
+    public SettingMode manualFx;
+    public SettingMode manualProgramShift;
+    public SettingMode manualPreviewZoom;
 
-    public final SettingMode dualPrimaryCameraMode;
-    public final SettingMode manualAperture;
-    public final SettingMode ae_TagetFPS;
+    public SettingMode selfTimer;
 
-    public final TypeSettingsMode manualWhiteBalance;
+    public SettingMode dualPrimaryCameraMode;
+    public SettingMode manualAperture;
+    public SettingMode ae_TagetFPS;
 
-    public final BooleanSettingsMode opencamera1Legacy;
-    public final BooleanSettingsMode useHuaweiCam2Extension;
-    public final BooleanSettingsMode orientationhack;
+    public TypeSettingsMode manualWhiteBalance;
+
+    public BooleanSettingsMode opencamera1Legacy;
+    public BooleanSettingsMode useHuaweiCam2Extension;
+    public BooleanSettingsMode support12bitRaw;
+    public BooleanSettingsMode orientationhack;
+    public BooleanSettingsMode qcomAFocus;
+    public BooleanSettingsMode dngSupportManualModes;
+    public BooleanSettingsMode forceRawToDng;
+    public BooleanSettingsMode needRestartAfterCapture;
 
     public String[] opcodeUrlList;
 
@@ -372,8 +387,24 @@ public class AppSettingsManager {
     private SharedPreferences settings;
     private Resources resources;
 
-    public AppSettingsManager(SharedPreferences sharedPreferences, Resources resources)
+    private boolean isInit =false;
+
+    private static AppSettingsManager appSettingsManager  = new AppSettingsManager();
+
+    private AppSettingsManager()
     {
+
+    }
+
+    public static AppSettingsManager getInstance()
+    {
+        return appSettingsManager;
+    }
+
+    public synchronized void init(SharedPreferences sharedPreferences, Resources resources)
+    {
+        if (isInit)
+            return;
         settings = sharedPreferences;
         this.resources = resources;
         Log.d(TAG, "Version/Build:" + BuildConfig.VERSION_NAME + "/" + BuildConfig.VERSION_CODE + " Last Version: " + getAppVersion());
@@ -469,16 +500,37 @@ public class AppSettingsManager {
         opencamera1Legacy = new BooleanSettingsMode(getResString(R.string.aps_opencamera1legacy));
         dualPrimaryCameraMode = new SettingMode(getResString(R.string.aps_dualprimarycameramode));
         useHuaweiCam2Extension = new BooleanSettingsMode(getResString(R.string.aps_usehuaweicam2));
+        support12bitRaw = new BooleanSettingsMode(getResString(R.string.aps_support12bitraw));
+        qcomAFocus = new BooleanSettingsMode(getResString(R.string.aps_qcomfocus));
+        dngSupportManualModes = new BooleanSettingsMode(getResString(R.string.aps_dngsupportmanualmodes));
+        forceRawToDng = new BooleanSettingsMode(getResString(R.string.aps_forcerawtondng));
+        needRestartAfterCapture = new BooleanSettingsMode(getResString(R.string.aps_needrestartaftercapture));
 
         ae_TagetFPS = new SettingMode(getResString(R.string.aps_ae_targetFPS));
 
         orientationhack = new BooleanSettingsMode(getResString(R.string.aps_orientationHack));
         tonemapProfilesSettings = new SettingMode(getResString(R.string.aps_tonemapProfile));
+        selfTimer = new SettingMode(getResString(R.string.aps_selftimer));
 
+
+        loadOpCodes();
 
         parseXml(sharedPreferences, resources);
 
+        isInit = true;
 
+    }
+
+    public void release()
+    {
+        isInit = false;
+        resources = null;
+        settings = null;
+    }
+
+    public boolean isInit()
+    {
+        return isInit;
     }
 
     private void parseXml(SharedPreferences sharedPreferences, Resources resources) {
@@ -486,24 +538,49 @@ public class AppSettingsManager {
         //first time init
         matrixes = parser.getMatrixes(resources);
         mDevice = sharedPreferences.getString("DEVICE","");
-        tonemapProfiles = parser.getToneMapProfiles(this);
+        tonemapProfiles = parser.getToneMapProfiles();
         if (mDevice == null || TextUtils.isEmpty(mDevice))
         {
             Log.d(TAG, "Lookup ConfigFile");
-            parser.parseAndFindSupportedDevice(resources,this,matrixes);
+            parser.parseAndFindSupportedDevice(resources,matrixes);
         }
         else //load only stuff for dng
         {
             Log.d(TAG, "load dngProfiles");
             opcodeUrlList = new String[2];
-            dngProfileHashMap = parser.getDngProfiles(matrixes,this);
+            dngProfileHashMap = parser.getDngProfiles(matrixes);
         }
+    }
+
+    private void loadOpCodes()
+    {
+        File op2 = new File(StringUtils.GetFreeDcamConfigFolder+"opc2.bin");
+        if (op2.exists())
+            try {
+                opcode2 = RawToDng.readFile(op2);
+                Log.d(TAG, "opcode2 size" + opcode2.length);
+            } catch (IOException e) {
+                Log.WriteEx(e);
+            }
+        File op3 = new File(StringUtils.GetFreeDcamConfigFolder+"opc3.bin");
+        if (op3.exists())
+            try {
+                opcode3 = RawToDng.readFile(op3);
+                Log.d(TAG, "opcode3 size" + opcode3.length);
+            } catch (IOException e) {
+                Log.WriteEx(e);
+            }
     }
 
     public void RESET()
     {
         settings.edit().clear().commit();
         parseXml(settings, resources);
+    }
+
+    public boolean appVersionHasChanged()
+    {
+        return BuildConfig.VERSION_CODE != getAppVersion();
     }
 
     public String getResString(int id)
@@ -559,37 +636,6 @@ public class AppSettingsManager {
         settings.edit().putBoolean("overrideprofile",legacy).commit();
     }
 
-    public boolean isForceRawToDng()
-    {
-        return settings.getBoolean("forcerawtodng", false);
-    }
-
-    public void setForceRawToDng(boolean legacy)
-    {
-        settings.edit().putBoolean("forcerawtodng",legacy).commit();
-    }
-
-    public boolean useQcomFocus()
-    {
-        return settings.getBoolean(getResString(R.string.aps_qcomfocus),false);
-    }
-
-    public boolean needRestartAfterCapture()
-    {
-        return settings.getBoolean("needrestartaftercapture", false);
-    }
-
-    public void setNeedRestartAfterCapture(boolean legacy)
-    {
-        settings.edit().putBoolean("needrestartaftercapture",legacy).commit();
-    }
-
-
-    public void setUseQcomFocus(boolean hasQcomFocus)
-    {
-        settings.edit().putBoolean(getResString(R.string.aps_qcomfocus),hasQcomFocus).commit();
-    }
-
     public int getAppVersion()
     {
         return settings.getInt(APPVERSION,0);
@@ -600,15 +646,6 @@ public class AppSettingsManager {
         settings.edit().putInt(APPVERSION,version).commit();
     }
 
-    public void setDngManualsSupported(boolean supported)
-    {
-        setBoolean("dngmanualSupported", supported);
-    }
-
-    public boolean getDngManualsSupported()
-    {
-        return getBoolean("dngmanualSupported", true);
-    }
 
     private void putString(String settingsval, String toSet)
     {
@@ -713,7 +750,7 @@ public class AppSettingsManager {
 
     public String GetCurrentModule()
     {
-        if (modules.get().equals(""))
+        if (TextUtils.isEmpty(modules.get()))
             return getResString(R.string.module_picture);
         return modules.get();
     }
@@ -840,6 +877,16 @@ public class AppSettingsManager {
     public boolean getIsFrontCamera()
     {
         return settings.getBoolean(getApiSettingString(FRONTCAMERA), false);
+    }
+
+    public byte[] getOpcode2()
+    {
+        return opcode2;
+    }
+
+    public byte[] getOpcode3()
+    {
+        return opcode3;
     }
 
 

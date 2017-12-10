@@ -19,11 +19,13 @@
 
 package freed.cam.apis.basecamera.parameters.modes;
 
+import android.text.TextUtils;
+
 import java.util.HashMap;
 
 import freed.cam.apis.basecamera.parameters.AbstractParameter;
 import freed.dng.CustomMatrix;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 
 /**
@@ -36,16 +38,14 @@ public class MatrixChooserParameter extends AbstractParameter
     private final HashMap<String, CustomMatrix> custommatrixes;
     private String currentval = "off";
     private boolean isSupported;
-    private AppSettingsManager appSettingsManager;
 
     final String TAG = MatrixChooserParameter.class.getSimpleName();
 
-    public MatrixChooserParameter(HashMap<String, CustomMatrix> matrixHashMap, AppSettingsManager appSettingsManager)
+    public MatrixChooserParameter(HashMap<String, CustomMatrix> matrixHashMap)
     {
-        this.appSettingsManager = appSettingsManager;
         this.custommatrixes = matrixHashMap;
         isSupported = true;
-        currentval = appSettingsManager.matrixset.get();
+        currentval = AppSettingsManager.getInstance().matrixset.get();
     }
 
     @Override
@@ -56,9 +56,11 @@ public class MatrixChooserParameter extends AbstractParameter
     @Override
     public void SetValue(String valueToSet, boolean setToCamera)
     {
+        if (TextUtils.isEmpty(valueToSet))
+            return;
         currentval = valueToSet;
         fireStringValueChanged(currentval);
-        appSettingsManager.matrixset.set(valueToSet);
+        AppSettingsManager.getInstance().matrixset.set(valueToSet);
     }
 
     @Override

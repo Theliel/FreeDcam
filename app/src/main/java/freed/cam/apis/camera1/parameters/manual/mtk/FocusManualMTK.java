@@ -21,13 +21,14 @@
 package freed.cam.apis.camera1.parameters.manual.mtk;
 
 import android.hardware.Camera.Parameters;
+import android.text.TextUtils;
 
 import com.troop.freedcam.R;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.camera1.parameters.ParametersHandler;
 import freed.cam.apis.camera1.parameters.manual.focus.BaseFocusManual;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 
 /**
@@ -41,7 +42,7 @@ public class FocusManualMTK extends BaseFocusManual {
     }
 
     @Override
-    public void SetValue(int valueToSet)
+    public void setValue(int valueToSet)
     {
         currentInt = valueToSet;
 
@@ -51,7 +52,8 @@ public class FocusManualMTK extends BaseFocusManual {
         }
         else
         {
-            if ((!manualFocusModeString.equals("") || manualFocusModeString == null)&& !cameraUiWrapper.getParameterHandler().FocusMode.GetStringValue().equals(manualFocusModeString)) //do not set "manual" to "manual"
+            if ((!TextUtils.isEmpty(manualFocusModeString) || manualFocusModeString == null)
+                    && !cameraUiWrapper.getParameterHandler().FocusMode.GetStringValue().equals(manualFocusModeString)) //do not set "manual" to "manual"
                 cameraUiWrapper.getParameterHandler().FocusMode.SetValue(manualFocusModeString, false);
 
             parameters.set(key_value, stringvalues[currentInt]);

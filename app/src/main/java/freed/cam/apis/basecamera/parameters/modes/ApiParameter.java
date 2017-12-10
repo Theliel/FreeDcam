@@ -20,10 +20,11 @@
 package freed.cam.apis.basecamera.parameters.modes;
 
 import android.os.Build.VERSION;
+import android.text.TextUtils;
 
 import freed.ActivityInterface;
 import freed.cam.apis.basecamera.parameters.AbstractParameter;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 
 /**
  * Created by troop on 21.07.2015.
@@ -42,7 +43,7 @@ public class ApiParameter extends AbstractParameter
     {
         if (VERSION.SDK_INT >= 21)
         {
-            if (fragment_activityInterface.getAppSettings().hasCamera2Features())
+            if (AppSettingsManager.getInstance().hasCamera2Features())
                 return new String[]{AppSettingsManager.API_SONY, AppSettingsManager.API_2, AppSettingsManager.API_1};
             else
                 return new String[]{AppSettingsManager.API_SONY, AppSettingsManager.API_1};
@@ -52,15 +53,15 @@ public class ApiParameter extends AbstractParameter
 
     @Override
     public String GetStringValue() {
-        String ret = fragment_activityInterface.getAppSettings().getCamApi();
-        if (ret.equals(""))
+        String ret = AppSettingsManager.getInstance().getCamApi();
+        if (TextUtils.isEmpty(ret))
             ret = AppSettingsManager.API_1;
         return ret;
     }
 
     @Override
     public void SetValue(String valueToSet, boolean setToCamera) {
-        fragment_activityInterface.getAppSettings().setCamApi(valueToSet);
+        AppSettingsManager.getInstance().setCamApi(valueToSet);
         fragment_activityInterface.SwitchCameraAPI(valueToSet);
     }
 

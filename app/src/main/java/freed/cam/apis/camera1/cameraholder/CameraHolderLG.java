@@ -19,10 +19,11 @@
 
 package freed.cam.apis.camera1.cameraholder;
 
-import com.lge.hardware.LGCamera;
+import com.lge.hardware.LGCameraRef;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.camera1.CameraHolder;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 
 /**
@@ -30,6 +31,7 @@ import freed.utils.Log;
  */
 public class CameraHolderLG extends CameraHolder
 {
+    private LGCameraRef lgCamera;
     public CameraHolderLG(CameraWrapperInterface cameraUiWrapper, Frameworks frameworks) {
         super(cameraUiWrapper,frameworks);
     }
@@ -37,15 +39,14 @@ public class CameraHolderLG extends CameraHolder
     @Override
     public boolean OpenCamera(int camera)
     {
-
         try {
-            LGCamera lgCamera;
-            if (appSettingsManager.opencamera1Legacy.getBoolean()) {
-                lgCamera = new LGCamera(camera, 256);
+
+            if (AppSettingsManager.getInstance().opencamera1Legacy.getBoolean()) {
+                lgCamera = new LGCameraRef(camera, 256);
                 Log.d(CameraHolderLG.class.getSimpleName(), "open LG camera legacy");
             }
             else {
-                lgCamera = new LGCamera(camera);
+                lgCamera = new LGCameraRef(camera);
                 Log.d(CameraHolderLG.class.getSimpleName(), "open LG camera");
             }
             mCamera = lgCamera.getCamera();
@@ -53,6 +54,8 @@ public class CameraHolderLG extends CameraHolder
         }
         catch (RuntimeException  | NoClassDefFoundError ex)
         {
+            if (mCamera != null)
+                mCamera.release();
             Log.WriteEx(ex);
             try {
                 super.OpenCamera(camera);
@@ -66,5 +69,11 @@ public class CameraHolderLG extends CameraHolder
 
         cameraUiWrapper.onCameraOpen("");
         return isRdy;
+    }
+
+    @Override
+    public void CloseCamera() {
+        super.CloseCamera();
+        lgCamera = null;
     }
 }

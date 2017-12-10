@@ -19,6 +19,8 @@
 
 package freed.cam.apis.camera1.parameters.modes;
 
+import android.text.TextUtils;
+
 import com.troop.freedcam.R;
 
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import java.util.List;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.parameters.AbstractParameter;
+import freed.settings.AppSettingsManager;
 import freed.utils.VideoMediaProfile;
 
 /**
@@ -38,21 +41,19 @@ public class VideoProfilesParameter extends AbstractParameter
     private final String TAG = VideoProfilesParameter.class.getSimpleName();
     protected HashMap<String, VideoMediaProfile> supportedProfiles;
     protected String profile;
-    protected CameraWrapperInterface cameraUiWrapper;
     protected boolean isSupported;
 
 
     public VideoProfilesParameter(CameraWrapperInterface cameraUiWrapper) {
-        super();
-        this.cameraUiWrapper = cameraUiWrapper;
+        super(cameraUiWrapper);
         isSupported =true;
-        supportedProfiles = cameraUiWrapper.getAppSettingsManager().getMediaProfiles();
-        profile = cameraUiWrapper.getAppSettingsManager().videoProfile.get();
+        supportedProfiles = AppSettingsManager.getInstance().getMediaProfiles();
+        profile = AppSettingsManager.getInstance().videoProfile.get();
         if (profile == null)
         {
             List<String> keys = new ArrayList<>(supportedProfiles.keySet());
             profile = keys.get(0);
-            cameraUiWrapper.getAppSettingsManager().videoProfile.set(profile);
+            AppSettingsManager.getInstance().videoProfile.set(profile);
         }
     }
 
@@ -74,7 +75,7 @@ public class VideoProfilesParameter extends AbstractParameter
     @Override
     public String GetStringValue()
     {
-        if (profile == null && supportedProfiles != null)
+        if ((profile == null || TextUtils.isEmpty(profile)) && supportedProfiles != null)
         {
             List<String> keys = new ArrayList<>(supportedProfiles.keySet());
             profile = keys.get(0);
@@ -92,7 +93,7 @@ public class VideoProfilesParameter extends AbstractParameter
 
     public VideoMediaProfile GetCameraProfile(String profile)
     {
-        if (profile == null || profile.equals(""))
+        if (profile == null || TextUtils.isEmpty(profile))
         {
             String[] t = supportedProfiles.keySet().toArray(new String[supportedProfiles.keySet().size()]);
             return supportedProfiles.get(t[0]);

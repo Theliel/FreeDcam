@@ -20,10 +20,11 @@
 package freed.cam.apis.basecamera.modules;
 
 import android.os.Handler;
+import android.text.TextUtils;
 
 import java.util.Date;
 
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 import freed.utils.Log;
 
 /**
@@ -43,15 +44,13 @@ public class IntervalHandler
     private final Handler handler;
     private long startTime;
     private boolean working;
-    private final AppSettingsManager appSettingsManager;
 
     public boolean IsWorking() {return working;}
 
-    public IntervalHandler(ModuleAbstract picmodule, AppSettingsManager appSettingsManager)
+    public IntervalHandler(ModuleAbstract picmodule)
     {
         this.picmodule = picmodule;
         handler = new Handler();
-        this.appSettingsManager = appSettingsManager;
     }
 
     public void StartInterval()
@@ -169,9 +168,9 @@ public class IntervalHandler
 
     public void StartShutterTime()
     {
-        String shutterdelay = appSettingsManager.getApiString(AppSettingsManager.SETTING_TIMER);
+        String shutterdelay = AppSettingsManager.getInstance().getApiString(AppSettingsManager.SETTING_TIMER);
         try {
-            if (shutterdelay.equals(""))
+            if (TextUtils.isEmpty(shutterdelay))
                 shutterdelay = "0 sec";
             if (!shutterdelay.equals("0 sec"))
                 shutterDelay = Integer.parseInt(shutterdelay.replace(" sec", "")) * 1000;

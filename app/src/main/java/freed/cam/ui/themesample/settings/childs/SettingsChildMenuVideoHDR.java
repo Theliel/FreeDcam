@@ -20,13 +20,14 @@
 package freed.cam.ui.themesample.settings.childs;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 
 import com.troop.freedcam.R;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.parameters.ParameterInterface;
-import freed.utils.AppSettingsManager;
+import freed.settings.AppSettingsManager;
 
 /**
  * Created by troop on 17.08.2015.
@@ -57,8 +58,8 @@ public class SettingsChildMenuVideoHDR extends SettingsChildMenu
     {
         if (parameter != null && parameter.IsSupported() &&  cameraWrapperInterface.getModuleHandler().getCurrentModule() != null)
         {
-            if (key_appsettings != null && !key_appsettings.equals(""))
-                fragment_activityInterface.getAppSettings().setApiString(key_appsettings, value);
+            if (key_appsettings != null && !TextUtils.isEmpty(key_appsettings))
+                AppSettingsManager.getInstance().setApiString(key_appsettings, value);
             if (cameraWrapperInterface.getModuleHandler().getCurrentModule().ModuleName().equals(cameraWrapperInterface.getResString(R.string.module_video)))
                 parameter.SetValue(value, true);
             onStringValueChanged(value);
