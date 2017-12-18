@@ -39,6 +39,7 @@ import freed.cam.apis.basecamera.CameraHolderAbstract;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.FocusEvents;
 import freed.cam.apis.basecamera.Size;
+import freed.settings.Settings;
 import freed.utils.Log;
 
 /**
@@ -251,7 +252,7 @@ public class CameraHolder extends CameraHolderAbstract
         try {
             if (!isRdy)
                 return;
-            Size s = new Size(cameraUiWrapper.getParameterHandler().PreviewSize.GetStringValue());
+            Size s = new Size(cameraUiWrapper.getParameterHandler().get(Settings.PreviewSize).GetStringValue());
             //Add 5 pre allocated buffers. that avoids that the camera create with each frame a new one
             for (int i = 0; i< BUFFERCOUNT; i++)
             {
@@ -352,7 +353,7 @@ public class CameraHolder extends CameraHolderAbstract
             paras.setGpsLatitude(loc.getLatitude());
             paras.setGpsLongitude(loc.getLongitude());
             paras.setGpsProcessingMethod(loc.getProvider());
-            paras.setGpsTimestamp(loc.getTime());
+            paras.setGpsTimestamp(loc.getTime()/1000);
             try {
                 mCamera.setParameters(paras);
             }

@@ -2,6 +2,8 @@
 // Created by troop on 23.10.2016.
 //
 
+#include <string.h>
+#include <math.h>
 #include "DngWriter.h"
 
 //#define LOG_RAW_DATA
@@ -22,12 +24,14 @@
 
 #define RAW_16BIT_TO_12BIT 5
 
+#ifdef LOG_RAW_DATA
 const char *bit_rep[16] = {
         [ 0] = "0000", [ 1] = "0001", [ 2] = "0010", [ 3] = "0011",
         [ 4] = "0100", [ 5] = "0101", [ 6] = "0110", [ 7] = "0111",
         [ 8] = "1000", [ 9] = "1001", [10] = "1010", [11] = "1011",
         [12] = "1100", [13] = "1101", [14] = "1110", [15] = "1111",
 };
+#endif
 
 
 TIFF* DngWriter::openfTIFF(char *fileSavePath)
@@ -165,7 +169,18 @@ void DngWriter::makeGPS_IFD(TIFF *tif) {
     {
         LOGD("TIFFCreateGPSDirectory() failed" );
     }
-    const char* longitudeRef = Longitude  < 0 ? "W" : "E";
+
+    if (!TIFFSetField( tif, GPSTAG_GPSVersionID, "\002\003\0\0"))
+    {
+        LOGD("Can't write GPSVersionID" );
+    }
+    LOGD("Wrote GPSVersionID" );
+
+    const char* longitudeRef = "E";
+    if (Longitude[0] < 0) {
+        longitudeRef = "W";
+        Longitude[0] = fabsf(Longitude[0]);
+    }
     if (!TIFFSetField( tif, GPSTAG_GPSLongitudeRef, longitudeRef))
     {
         LOGD("Can't write LongitudeRef" );
@@ -177,7 +192,11 @@ void DngWriter::makeGPS_IFD(TIFF *tif) {
         LOGD("Can't write Longitude" );
     }
     LOGD("Longitude Written");
-    const char* latitudeRef = Latitude < 0 ? "S" : "N";
+    const char* latitudeRef = "N";
+    if (Latitude[0] < 0) {
+        latitudeRef = "S";
+        Latitude[0] = fabsf(Latitude[0]);
+    }
     LOGD("PMETH Written");
     if (!TIFFSetField( tif, GPSTAG_GPSLatitudeRef, latitudeRef)) {
         LOGD("Can't write LAti REf" );
@@ -194,6 +213,18 @@ void DngWriter::makeGPS_IFD(TIFF *tif) {
         LOGD("Can't write Altitude" );
     }
     LOGD("Altitude Written");
+
+    if (!TIFFSetField( tif, GPSTAG_GPSTimeStamp, gpsTime))
+        {
+            LOGD("Can't write gpsTime" );
+        }
+    LOGD("GPSTimeStamp Written");
+
+    if (!TIFFSetField( tif, GPSTAG_GPSDateStamp, gpsDate))
+        {
+            LOGD("Can't write gpsTime" );
+        }
+    LOGD("GPSTimeDate Written");
 }
 
 void DngWriter::writeExifIfd(TIFF *tif) {
@@ -294,23 +325,16 @@ void DngWriter::process10tight(TIFF *tif) {
     unsigned char* out;
     LOGD("writer-RowSize: %d  rawheight:%d ,rawwidht: %d", rawSize, rawheight,
          rawwidht);
-    if (rowSize == 0) {
-        realrowsize = rawSize / rawheight;
-        shouldberowsize = realrowsize;
-        if (realrowsize % 5 > 0) {
-            shouldberowsize = rawwidht * 10 / 8;
-            bytesToSkip = realrowsize - shouldberowsize;
-        }
-        LOGD("realrow: %i shoudlbe: %i", realrowsize, shouldberowsize);
-        LOGD("width: %i height: %i", rawwidht, rawheight);
-        LOGD("bytesToSkip: %i", bytesToSkip);
-    }
-    else{
-        realrowsize = rawSize / rawheight;
-        shouldberowsize = rowSize;
+
+    realrowsize = -(-5 * rawwidht >> 5) << 3;
+    shouldberowsize = realrowsize;
+    if (realrowsize % 5 > 0) {
+        shouldberowsize = rawwidht * 10 / 8;
         bytesToSkip = realrowsize - shouldberowsize;
-        LOGD("realrowsize:%i shouldbe:%i bytestoskip: %i", realrowsize, shouldberowsize, bytesToSkip);
     }
+    LOGD("realrow: %i shoudlbe: %i", realrowsize, shouldberowsize);
+    LOGD("width: %i height: %i", rawwidht, rawheight);
+    LOGD("bytesToSkip: %i", bytesToSkip);
 
     int row = shouldberowsize;
     out = new unsigned char[shouldberowsize*rawheight];
@@ -843,6 +867,7 @@ void DngWriter::WriteDNG() {
     _exposureIndex = NULL;
     Altitude = NULL;
     gpsTime = NULL;
+    gpsDate = NULL;
     gps = NULL;
     whitelevel == NULL;
     fileLength = NULL;

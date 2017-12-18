@@ -7,7 +7,7 @@ import android.os.Build;
 import java.util.Map;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
-import freed.settings.AppSettingsManager;
+import freed.settings.SettingsManager;
 import freed.utils.StringUtils;
 
 /**
@@ -20,11 +20,11 @@ public class DualCameraModeHuaweiApi2 extends BaseModeApi2
     protected CaptureRequest.Key<Byte> parameterKey;
 
 
-    public DualCameraModeHuaweiApi2(CameraWrapperInterface cameraUiWrapper, AppSettingsManager.SettingMode settingMode, CaptureRequest.Key<Byte> parameterKey) {
+    public DualCameraModeHuaweiApi2(CameraWrapperInterface cameraUiWrapper, SettingsManager.SettingMode settingMode, CaptureRequest.Key<Byte> parameterKey) {
         super(cameraUiWrapper, settingMode, null);
         this.parameterKey = parameterKey;
         isSupported = settingMode.isSupported();
-        captureSessionHandler.SetParameterRepeating(parameterKey,(byte)0);
+        captureSessionHandler.SetParameterRepeating(parameterKey,(byte)0,true);
         if (isSupported)
             parameterValues = StringUtils.StringArrayToIntHashmap(settingMode.getValues());
         else settingMode = null;
@@ -40,7 +40,7 @@ public class DualCameraModeHuaweiApi2 extends BaseModeApi2
     public void setValue(String valueToSet, boolean setToCamera)
     {
         int toset = parameterValues.get(valueToSet);
-        captureSessionHandler.SetParameterRepeating(parameterKey, Byte.valueOf((byte)toset));
+        captureSessionHandler.SetParameterRepeating(parameterKey, Byte.valueOf((byte)toset),setToCamera);
 
         fireStringValueChanged(valueToSet);
 

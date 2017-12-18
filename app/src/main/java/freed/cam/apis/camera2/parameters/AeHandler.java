@@ -27,10 +27,11 @@ import com.troop.freedcam.R;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.parameters.AbstractParameter;
+import freed.settings.Settings;
 import freed.cam.apis.basecamera.parameters.manual.AbstractManualShutter;
 import freed.cam.apis.camera2.CameraHolderApi2;
 import freed.cam.apis.camera2.parameters.modes.BaseModeApi2;
-import freed.settings.AppSettingsManager;
+import freed.settings.SettingsManager;
 import freed.utils.Log;
 import freed.utils.StringFloatArray;
 
@@ -73,9 +74,9 @@ public class AeHandler
             manualExposureApi2.fireIsSupportedChanged(false);
             //turn flash off when ae is off. else on some devices it applys only manual stuff only for a few frames
             //apply it direct to the preview that old value can get loaded from FocusModeParameter when Ae gets set back to auto
-            cameraHolder.captureSessionHandler.SetParameterRepeating(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF);
+            cameraHolder.captureSessionHandler.SetParameterRepeating(CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF,true);
             //hide flash ui item its not supported in manual mode
-            cameraUiWrapper.getParameterHandler().FlashMode.fireIsSupportedChanged(false);
+            cameraUiWrapper.getParameterHandler().get(Settings.FlashMode).fireIsSupportedChanged(false);
             //enable manualiso item in ui
             manualISoApi2.fireIsReadOnlyChanged(true);
             //enable manual exposuretime in ui
@@ -87,9 +88,9 @@ public class AeHandler
             ae_active = true;
             //back in auto mode
             //set flash back to its old state
-            cameraUiWrapper.getParameterHandler().FlashMode.SetValue(cameraUiWrapper.getParameterHandler().FlashMode.GetStringValue(),true);
+            cameraUiWrapper.getParameterHandler().get(Settings.FlashMode).SetValue(cameraUiWrapper.getParameterHandler().get(Settings.FlashMode).GetStringValue(),true);
             //show flashmode ui item
-            cameraUiWrapper.getParameterHandler().FlashMode.fireIsSupportedChanged(true);
+            cameraUiWrapper.getParameterHandler().get(Settings.FlashMode).fireIsSupportedChanged(true);
             //set exposure ui item to enable
             manualExposureApi2.fireIsSupportedChanged(true);
             manualExposureApi2.fireIsReadOnlyChanged(true);
@@ -103,7 +104,7 @@ public class AeHandler
     public class AeModeApi2 extends BaseModeApi2
     {
         public AeModeApi2(CameraWrapperInterface cameraUiWrapper) {
-            super(cameraUiWrapper, AppSettingsManager.getInstance().exposureMode,CaptureRequest.CONTROL_AE_MODE);
+            super(cameraUiWrapper, SettingsManager.get(Settings.ExposureMode),CaptureRequest.CONTROL_AE_MODE);
         }
 
         @Override
@@ -128,7 +129,7 @@ public class AeHandler
 
         public ManualExposureApi2(CameraWrapperInterface cameraUiWrapper) {
             super(cameraUiWrapper);
-            expocompvalues = new StringFloatArray(AppSettingsManager.getInstance().manualExposureCompensation.getValues());
+            expocompvalues = new StringFloatArray(SettingsManager.get(Settings.M_ExposureCompensation).getValues());
             currentInt = expocompvalues.getSize() / 2;
         }
 
@@ -139,13 +140,13 @@ public class AeHandler
 
         @TargetApi(VERSION_CODES.LOLLIPOP)
         @Override
-        public void setValue(int valueToSet) {
+        public void setValue(int valueToSet, boolean setToCamera) {
             if (cameraHolder == null || cameraHolder.captureSessionHandler.GetActiveCameraCaptureSession() == null)
                 return;
             currentInt = valueToSet;
             if (expocompvalues == null || expocompvalues.getSize() == 0)
                 return;
-            setExpoCompensation(valueToSet);
+            setExpoCompensation(valueToSet,setToCamera);
         }
 
         @Override
@@ -160,7 +161,7 @@ public class AeHandler
 
         @Override
         public boolean IsSupported() {
-            return AppSettingsManager.getInstance().manualExposureCompensation.isSupported();
+            return SettingsManager.get(Settings.M_ExposureCompensation).isSupported();
         }
 
         @Override
@@ -175,9 +176,9 @@ public class AeHandler
 
     }
 
-    protected void setExpoCompensation(int valueToSet) {
+    protected void setExpoCompensation(int valueToSet,boolean setToCamera) {
         int t = valueToSet - manualExposureApi2.getStringValues().length / 2;
-        cameraHolder.captureSessionHandler.SetParameterRepeating(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, t);
+        cameraHolder.captureSessionHandler.SetParameterRepeating(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, t,setToCamera);
     }
 
     protected boolean isExposureCompSetSupported()
@@ -189,14 +190,14 @@ public class AeHandler
      * Created by troop on 06.03.2015.
      */
     @TargetApi(VERSION_CODES.LOLLIPOP)
-    public class ManualExposureTimeApi2 extends AbstractManualShutter
+    public class ManualExposureTimeApi2 extends AbstractParameter
     {
         public final String TAG = ManualExposureTimeApi2.class.getSimpleName();
         public ManualExposureTimeApi2(CameraWrapperInterface cameraUiWrapper) {
             super(cameraUiWrapper);
-            isSupported = AppSettingsManager.getInstance().manualExposureTime.isSupported();
+            isSupported = SettingsManager.get(Settings.M_ExposureTime).isSupported();
             if (isSupported)
-                stringvalues = AppSettingsManager.getInstance().manualExposureTime.getValues();
+                stringvalues = SettingsManager.get(Settings.M_ExposureTime).getValues();
         }
 
         @Override
@@ -221,15 +222,14 @@ public class AeHandler
 
         @TargetApi(VERSION_CODES.LOLLIPOP)
         @Override
-        public void setValue(int valueToSet)
+        public void setValue(int valueToSet, boolean setToCamera)
         {
             if (cameraHolder == null)
                 return;
             if (valueToSet >= manualExposureTimeApi2.getStringValues().length)
                 valueToSet = manualExposureTimeApi2.getStringValues().length - 1;
             currentInt = valueToSet;
-            setExposureTime(valueToSet);
-
+            setExposureTime(valueToSet,setToCamera);
         }
 
         @Override
@@ -249,18 +249,18 @@ public class AeHandler
         }
     }
 
-    protected void setExposureTime(int valueToSet)
+    protected void setExposureTime(int valueToSet,boolean setToCamera)
     {
         if (valueToSet > 0) {
             long val = AbstractManualShutter.getMilliSecondStringFromShutterString(manualExposureTimeApi2.getStringValues()[valueToSet]) * 1000;
             Log.d(manualExposureTimeApi2.TAG, "ExposureTimeToSet:" + val);
             cameraHolder.captureSessionHandler.SetCaptureParameter(CaptureRequest.SENSOR_EXPOSURE_TIME,val);
-            if (val > MAX_PREVIEW_EXPOSURETIME && !AppSettingsManager.getInstance().GetCurrentModule().equals(cameraUiWrapper.getResString(R.string.module_video))) {
+            if (val > MAX_PREVIEW_EXPOSURETIME && !SettingsManager.getInstance().GetCurrentModule().equals(cameraUiWrapper.getResString(R.string.module_video))) {
                 Log.d(manualExposureTimeApi2.TAG, "ExposureTime Exceed 0,8sec for preview, set it to 0,8sec");
                 val = MAX_PREVIEW_EXPOSURETIME;
             }
 
-            cameraHolder.captureSessionHandler.SetPreviewParameterRepeating(CaptureRequest.SENSOR_EXPOSURE_TIME, val);
+            cameraHolder.captureSessionHandler.SetPreviewParameterRepeating(CaptureRequest.SENSOR_EXPOSURE_TIME, val,setToCamera);
             manualExposureTimeApi2.fireIntValueChanged(valueToSet);
         }
     }
@@ -280,9 +280,9 @@ public class AeHandler
         public ManualISoApi2(CameraWrapperInterface cameraUiWrapper) {
             super(cameraUiWrapper);
             currentInt = 0;
-            isSupported = AppSettingsManager.getInstance().manualIso.isSupported();
+            isSupported = SettingsManager.get(Settings.M_ManualIso).isSupported();
             if (isSupported)
-                stringvalues = AppSettingsManager.getInstance().manualIso.getValues();
+                stringvalues = SettingsManager.get(Settings.M_ManualIso).getValues();
         }
 
         @Override
@@ -291,7 +291,7 @@ public class AeHandler
         }
 
         @Override
-        public void setValue(int valueToSet)
+        public void setValue(int valueToSet, boolean setToCamera)
         {
             //workaround when value was -1 to avoid outofarray ex
             Log.d(TAG, "set Manual Iso: " +valueToSet);
@@ -299,7 +299,7 @@ public class AeHandler
                 valueToSet = 0;
             //////////////////////
             currentInt = valueToSet;
-            setIso(valueToSet);
+            setIso(valueToSet,setToCamera);
         }
 
         @Override
@@ -308,19 +308,20 @@ public class AeHandler
         }
     }
 
-    protected void setIso(int valueToSet)
+    protected void setIso(int valueToSet,boolean setToCamera)
     {
         if (cameraHolder == null || cameraHolder.captureSessionHandler.GetActiveCameraCaptureSession() == null)
             return;
         if (valueToSet == 0)
         {
-            aeModeApi2.SetValue(AppSettingsManager.getInstance().exposureMode.get(),true);
+            aeModeApi2.SetValue(SettingsManager.get(Settings.ExposureMode).get(),setToCamera);
         }
         else
         {
             if (ae_active)
-                aeModeApi2.SetValue(cameraUiWrapper.getContext().getString(R.string.off),true);
-            cameraHolder.captureSessionHandler.SetParameterRepeating(CaptureRequest.SENSOR_SENSITIVITY, Integer.parseInt(manualISoApi2.getStringValues()[valueToSet]));
+                aeModeApi2.SetValue(cameraUiWrapper.getContext().getString(R.string.off),setToCamera);
+            cameraHolder.captureSessionHandler.SetParameterRepeating(CaptureRequest.SENSOR_SENSITIVITY, Integer.parseInt(manualISoApi2.getStringValues()[valueToSet]),setToCamera);
+            manualISoApi2.fireIntValueChanged(valueToSet);
         }
     }
 

@@ -47,6 +47,7 @@ import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.FocuspeakProcessor;
 import freed.cam.apis.basecamera.Size;
 import freed.cam.apis.basecamera.modules.ModuleChangedEvent;
+import freed.settings.Settings;
 import freed.cam.apis.camera1.CameraHolder;
 import freed.cam.apis.camera1.I_AspectRatio;
 import freed.utils.FreeDPool;
@@ -73,7 +74,7 @@ public class FocusPeakProcessorAp1 implements PreviewCallback, CameraStateEvents
     private boolean isWorking;
     private final RenderScriptManager renderScriptManager;
     private int expectedByteSize;
-    private final BlockingQueue<byte[]> frameQueue = new ArrayBlockingQueue<>(2);
+    private final BlockingQueue<byte[]> frameQueue = new ArrayBlockingQueue<>(CameraHolder.BUFFERCOUNT);
 
     public FocusPeakProcessorAp1(I_AspectRatio output, CameraWrapperInterface cameraUiWrapper, Context context, RenderScriptManager renderScriptManager)
     {
@@ -95,7 +96,7 @@ public class FocusPeakProcessorAp1 implements PreviewCallback, CameraStateEvents
                         FocusPeakProcessorAp1.this.renderScriptManager.GetOut().setSurface(mSurface);
                     else {
                         Log.d(TAG, "Allocout null or not USAGE_IO_OUTPUT");
-                        String s = FocusPeakProcessorAp1.this.cameraUiWrapper.getParameterHandler().PreviewSize.GetStringValue();
+                        String s = FocusPeakProcessorAp1.this.cameraUiWrapper.getParameterHandler().get(Settings.PreviewSize).GetStringValue();
                         if (!TextUtils.isEmpty(s)) {
                             Size size = new Size(s);
                             reset(size.width, size.height);
@@ -161,7 +162,7 @@ public class FocusPeakProcessorAp1 implements PreviewCallback, CameraStateEvents
         Log.d(TAG, "setEnable" + enabled);
         if (enabled)
         {
-            Size size = new Size(cameraUiWrapper.getParameterHandler().PreviewSize.GetStringValue());
+            Size size = new Size(cameraUiWrapper.getParameterHandler().get(Settings.PreviewSize).GetStringValue());
             reset(size.width, size.height);
             startPeak();
             Log.d(TAG, "Set PreviewCallback");
@@ -175,8 +176,8 @@ public class FocusPeakProcessorAp1 implements PreviewCallback, CameraStateEvents
             clear_preview("setEnable");
 
         }
-        if(cameraUiWrapper.getParameterHandler().Focuspeak != null && cameraUiWrapper.getParameterHandler().Focuspeak.IsSupported())
-            cameraUiWrapper.getParameterHandler().Focuspeak.fireStringValueChanged(enabled +"");
+        if(cameraUiWrapper.getParameterHandler().get(Settings.Focuspeak) != null && cameraUiWrapper.getParameterHandler().get(Settings.Focuspeak).IsSupported())
+            cameraUiWrapper.getParameterHandler().get(Settings.Focuspeak).fireStringValueChanged(enabled +"");
     }
 
     private void clear_preview(String from)

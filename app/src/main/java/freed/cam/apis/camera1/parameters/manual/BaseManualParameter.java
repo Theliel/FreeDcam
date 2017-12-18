@@ -29,7 +29,7 @@ import freed.cam.apis.basecamera.modules.ModuleChangedEvent;
 import freed.cam.apis.basecamera.parameters.AbstractParameter;
 import freed.cam.apis.basecamera.parameters.ParameterEvents;
 import freed.cam.apis.camera1.parameters.ParametersHandler;
-import freed.settings.AppSettingsManager;
+import freed.settings.SettingsManager;
 import freed.utils.Log;
 
 /**
@@ -69,7 +69,7 @@ public class BaseManualParameter extends AbstractParameter
         if (isSupported)
         {
             Log.d(TAG,"Reset Back from:" + currentInt + " to:" + default_value);
-            SetValue(default_value);
+            SetValue(default_value, true);
             fireIntValueChanged(default_value);
         }
     }
@@ -80,7 +80,7 @@ public class BaseManualParameter extends AbstractParameter
         this.parameters = parameters;
     }
 
-    public BaseManualParameter(Parameters parameters, CameraWrapperInterface cameraUiWrapper, AppSettingsManager.SettingMode settingMode)
+    public BaseManualParameter(Parameters parameters, CameraWrapperInterface cameraUiWrapper, SettingsManager.SettingMode settingMode)
     {
         super(cameraUiWrapper);
         this.parameters = parameters;
@@ -159,7 +159,7 @@ public class BaseManualParameter extends AbstractParameter
     }
 
     @Override
-    public void setValue(int valueToset)
+    public void setValue(int valueToset, boolean setToCamera)
     {
         currentInt = valueToset;
         Log.d(TAG, "set " + key_value + " to " + valueToset);

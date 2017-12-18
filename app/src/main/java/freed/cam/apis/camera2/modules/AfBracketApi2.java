@@ -28,7 +28,8 @@ import com.troop.freedcam.R;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.modules.ModuleHandlerAbstract;
-import freed.settings.AppSettingsManager;
+import freed.settings.Settings;
+import freed.settings.SettingsManager;
 
 /**
  * Created by troop on 18.08.2016.
@@ -61,8 +62,8 @@ public class AfBracketApi2 extends PictureModuleApi2
     @Override
     public void InitModule() {
         super.InitModule();
-        cameraUiWrapper.getParameterHandler().Burst.SetValue(PICSTOTAKE-1);
-        focuslength = parameterHandler.ManualFocus.getStringValues().length -1;
+        cameraUiWrapper.getParameterHandler().get(Settings.M_Burst).SetValue(PICSTOTAKE-1, true);
+        focuslength = parameterHandler.get(Settings.M_Focus).getStringValues().length -1;
         focusStep =  focuslength/PICSTOTAKE;
         currentFocusPos = 1;
         changeCaptureState(ModuleHandlerAbstract.CaptureStates.image_capture_stop);
@@ -79,8 +80,8 @@ public class AfBracketApi2 extends PictureModuleApi2
         super.onStartTakePicture();
         int max  = 0;
         try {
-            min = Integer.parseInt(AppSettingsManager.getInstance().getApiString(AppSettingsManager.SETTING_AFBRACKETMIN));
-            max = Integer.parseInt(AppSettingsManager.getInstance().getApiString(AppSettingsManager.SETTING_AFBRACKETMAX));
+            min = Integer.parseInt(SettingsManager.getInstance().getApiString(SettingsManager.SETTING_AFBRACKETMIN));
+            max = Integer.parseInt(SettingsManager.getInstance().getApiString(SettingsManager.SETTING_AFBRACKETMAX));
         }
         catch (NumberFormatException ex)
         {
@@ -90,7 +91,7 @@ public class AfBracketApi2 extends PictureModuleApi2
 
         if (min == 0 && max == 0)
         {
-            focuslength = parameterHandler.ManualFocus.getStringValues().length -1;
+            focuslength = parameterHandler.get(Settings.M_Focus).getStringValues().length -1;
             focusStep = focuslength /PICSTOTAKE;
             currentFocusPos = 1;
         }

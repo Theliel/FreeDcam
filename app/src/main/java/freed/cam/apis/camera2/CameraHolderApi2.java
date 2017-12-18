@@ -56,7 +56,9 @@ import java.util.List;
 import freed.cam.apis.basecamera.CameraHolderAbstract;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.FocusEvents;
-import freed.settings.AppSettingsManager;
+import freed.cam.apis.basecamera.parameters.ParameterInterface;
+import freed.settings.Settings;
+import freed.settings.SettingsManager;
 import freed.utils.Log;
 import freed.utils.StringUtils;
 
@@ -78,6 +80,11 @@ public class CameraHolderApi2 extends CameraHolderAbstract
         void onAeCompensationChanged(int aecompensation);
     }
 
+    public interface WaitForFirstFrameCallback
+    {
+        void onFirstFrame();
+    }
+
     public boolean isWorking;
 
     public CameraManager manager;
@@ -87,7 +94,6 @@ public class CameraHolderApi2 extends CameraHolderAbstract
     public StreamConfigurationMap map;
     public int CurrentCamera;
     public CameraCharacteristics characteristics;
-    public String VideoSize;
     public CaptureSessionHandler captureSessionHandler;
     public boolean flashRequired = false;
     int afState;
@@ -96,6 +102,9 @@ public class CameraHolderApi2 extends CameraHolderAbstract
     public int currentIso;
     private Pair<Float,Float> focusRanges;
     private float focus_distance;
+
+    private boolean waitForFirstFrame = false;
+    private WaitForFirstFrameCallback waitForFirstFrameCallback;
 
     boolean errorRecieved;
 
@@ -113,6 +122,17 @@ public class CameraHolderApi2 extends CameraHolderAbstract
         super(cameraUiWrapper);
         manager = (CameraManager) cameraUiWrapper.getContext().getSystemService(Context.CAMERA_SERVICE);
 
+     }
+
+
+     public void setWaitForFirstFrame()
+     {
+         waitForFirstFrame = true;
+     }
+
+     public void setWaitForFirstFrameCallback(WaitForFirstFrameCallback callback)
+     {
+         this.waitForFirstFrameCallback = callback;
      }
 
     //###########################  public camera methods
@@ -144,6 +164,10 @@ public class CameraHolderApi2 extends CameraHolderAbstract
 
         } catch (CameraAccessException ex) {
             Log.WriteEx(ex);
+            if (mCameraDevice != null) {
+                mCameraDevice.close();
+                mCameraDevice = null;
+            }
             return false;
         }
         return true;
@@ -340,8 +364,10 @@ public class CameraHolderApi2 extends CameraHolderAbstract
         {
             Log.d(TAG,"Camera Disconnected");
 //            mCameraOpenCloseLock.release();
-            cameraDevice.close();
-            mCameraDevice = null;
+            if (mCameraDevice != null) {
+                mCameraDevice.close();
+                mCameraDevice = null;
+            }
             if (UIHandler != null)
                 UIHandler.post(new Runnable() {
                     @Override
@@ -356,6 +382,11 @@ public class CameraHolderApi2 extends CameraHolderAbstract
         {
             Log.d(TAG, "Camera Error" + error);
 //            mCameraOpenCloseLock.release();
+            if (mCameraDevice != null) {
+                mCameraDevice.close();
+                mCameraDevice = null;
+
+            }
             errorRecieved = true;
             UIHandler.post(new Runnable() {
                 @Override
@@ -375,52 +406,62 @@ public class CameraHolderApi2 extends CameraHolderAbstract
         {
             if (result == null)
                 return;
-            if (AppSettingsManager.getInstance().useHuaweiCam2Extension.getBoolean())
+            if (waitForFirstFrame)
             {
-                if (cameraUiWrapper.getParameterHandler().ManualShutter.GetValue() == 0) {
+                if (waitForFirstFrameCallback != null)
+                    waitForFirstFrameCallback.onFirstFrame();
+                waitForFirstFrame = false;
+            }
+
+            ParameterInterface expotime = cameraUiWrapper.getParameterHandler().get(Settings.M_ExposureTime);
+            ParameterInterface iso = cameraUiWrapper.getParameterHandler().get(Settings.M_ManualIso);
+            if (SettingsManager.get(Settings.useHuaweiCamera2Extension).getBoolean())
+            {
+                if (expotime.GetValue() == 0) {
                     Long expoTime = result.get(CaptureResult.SENSOR_EXPOSURE_TIME);
                     if (expoTime != null) {
                         currentExposureTime = expoTime;
-                        cameraUiWrapper.getParameterHandler().ManualShutter.fireStringValueChanged(getShutterStringNS(expoTime));
+                        expotime.fireStringValueChanged(getShutterStringNS(expoTime));
                     }
                 }
-                if (cameraUiWrapper.getParameterHandler().ManualIso.GetValue() == 0)
+                if (iso.GetValue() == 0)
                 {
-                    Integer iso = result.get(CaptureResult.SENSOR_SENSITIVITY);
-                    if(iso != null) {
-                        currentIso = iso;
-                        cameraUiWrapper.getParameterHandler().ManualIso.fireStringValueChanged(String.valueOf(iso));
+                    Integer isova = result.get(CaptureResult.SENSOR_SENSITIVITY);
+                    if(isova != null) {
+                        currentIso = isova;
+                        iso.fireStringValueChanged(String.valueOf(isova));
                     }
                 }
             }
             else {
-                if (cameraUiWrapper.getParameterHandler().ManualShutter != null && cameraUiWrapper.getParameterHandler().ManualShutter.IsSupported()) {
+                if (expotime != null && expotime.IsSupported()) {
                     if (result != null && result.getKeys().size() > 0) {
                         try {
-                            if (!cameraUiWrapper.getParameterHandler().ExposureMode.GetStringValue().equals(cameraUiWrapper.getContext().getString(R.string.off)) && !cameraUiWrapper.getParameterHandler().ControlMode.equals(cameraUiWrapper.getContext().getString(R.string.off))) {
+                            if (!cameraUiWrapper.getParameterHandler().get(Settings.ExposureMode).GetStringValue().equals(cameraUiWrapper.getContext().getString(R.string.off))
+                                    && !cameraUiWrapper.getParameterHandler().get(Settings.ControlMode).equals(cameraUiWrapper.getContext().getString(R.string.off))) {
                                 try {
                                     long expores = result.get(TotalCaptureResult.SENSOR_EXPOSURE_TIME);
                                     currentExposureTime = expores;
                                     if (expores != 0) {
-                                        cameraUiWrapper.getParameterHandler().ManualShutter.fireStringValueChanged(getShutterStringNS(expores));
+                                        expotime.fireStringValueChanged(getShutterStringNS(expores));
                                     } else
-                                        cameraUiWrapper.getParameterHandler().ManualShutter.fireStringValueChanged("1/60");
+                                        expotime.fireStringValueChanged("1/60");
 
                                     //Log.v(TAG, "ExposureTime: " + result.get(TotalCaptureResult.SENSOR_EXPOSURE_TIME));
                                 } catch (Exception ex) {
                                     Log.WriteEx(ex);
                                 }
                                 try {
-                                    int iso = result.get(TotalCaptureResult.SENSOR_SENSITIVITY);
-                                    currentIso = iso;
-                                    cameraUiWrapper.getParameterHandler().ManualIso.fireStringValueChanged("" + iso);
+                                    int isova = result.get(TotalCaptureResult.SENSOR_SENSITIVITY);
+                                    currentIso = isova;
+                                    iso.fireStringValueChanged("" + isova);
                                     //Log.v(TAG, "Iso: " + result.get(TotalCaptureResult.SENSOR_SENSITIVITY));
                                 } catch (NullPointerException ex) {
                                     Log.WriteEx(ex);
                                 }
                                 try {
                                     focus_distance = result.get(TotalCaptureResult.LENS_FOCUS_DISTANCE);
-                                    cameraUiWrapper.getParameterHandler().ManualFocus.fireStringValueChanged(StringUtils.getMeterString(1 / focus_distance));
+                                    cameraUiWrapper.getParameterHandler().get(Settings.M_Focus).fireStringValueChanged(StringUtils.getMeterString(1 / focus_distance));
                                 } catch (NullPointerException ex) {
                                     Log.WriteEx(ex);
                                 }
@@ -467,13 +508,13 @@ public class CameraHolderApi2 extends CameraHolderAbstract
                         break;
                     case 4:
                         state = "FOCUSED_LOCKED";
-                        captureSessionHandler.SetParameterRepeating(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_IDLE);
+                        captureSessionHandler.SetParameterRepeating(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_IDLE,true);
                         if (cameraUiWrapper.getFocusHandler().focusEvent != null)
                             cameraUiWrapper.getFocusHandler().focusEvent.FocusFinished(true);
                         break;
                     case 5:
                         state = "NOT_FOCUSED_LOCKED";
-                        captureSessionHandler.SetParameterRepeating(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_IDLE);
+                        captureSessionHandler.SetParameterRepeating(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_IDLE,true);
                         if (cameraUiWrapper.getFocusHandler().focusEvent != null)
                             cameraUiWrapper.getFocusHandler().focusEvent.FocusFinished(false);
                         break;
@@ -520,10 +561,10 @@ public class CameraHolderApi2 extends CameraHolderAbstract
                 //Log.d(TAG,"ExpoCompensation:" + );
             }
 
-            if (cameraUiWrapper.getParameterHandler().ExposureLock != null && result.get(CaptureResult.CONTROL_AE_LOCK) != null) {
+            if (cameraUiWrapper.getParameterHandler().get(Settings.ExposureLock) != null && result.get(CaptureResult.CONTROL_AE_LOCK) != null) {
                 String expolock = result.get(CaptureResult.CONTROL_AE_LOCK).toString();
                 if (expolock != null)
-                    cameraUiWrapper.getParameterHandler().ExposureLock.fireStringValueChanged(expolock);
+                    cameraUiWrapper.getParameterHandler().get(Settings.ExposureLock).fireStringValueChanged(expolock);
             }
         }
 

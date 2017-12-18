@@ -39,7 +39,7 @@ import freed.cam.apis.basecamera.FocuspeakProcessor;
 import freed.cam.apis.camera2.modules.I_PreviewWrapper;
 import freed.cam.apis.camera2.parameters.ParameterHandlerApi2;
 import freed.cam.apis.camera2.renderscript.FocuspeakProcessorApi2;
-import freed.settings.AppSettingsManager;
+import freed.settings.SettingsManager;
 import freed.utils.Log;
 import freed.viewer.screenslide.MyHistogram;
 
@@ -48,7 +48,7 @@ import freed.viewer.screenslide.MyHistogram;
  * Created by troop on 06.06.2015.
  */
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class Camera2Fragment extends CameraFragmentAbstract implements TextureView.SurfaceTextureListener
+public class Camera2Fragment extends CameraFragmentAbstract implements TextureView.SurfaceTextureListener, CameraHolderApi2.WaitForFirstFrameCallback
 {
     private AutoFitTextureView textureView;
     private MyHistogram histogram;
@@ -69,7 +69,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
 
 
     public String CameraApiName() {
-        return AppSettingsManager.API_2;
+        return SettingsManager.API_2;
     }
 
     @Override
@@ -87,6 +87,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
         moduleHandler = new ModuleHandlerApi2(Camera2Fragment.this);
         Focus = new FocusHandler(Camera2Fragment.this);
         cameraHolder = new CameraHolderApi2(Camera2Fragment.this);
+        ((CameraHolderApi2)cameraHolder).setWaitForFirstFrameCallback(this);
         ((CameraHolderApi2)cameraHolder).captureSessionHandler = new CaptureSessionHandler(Camera2Fragment.this, ((CameraHolderApi2)cameraHolder).cameraBackroundValuesChangedListner);
         mProcessor = new FocuspeakProcessorApi2(renderScriptManager,histogram);
 
@@ -97,6 +98,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
     @Override
     public void onResume() {
         super.onResume();
+        Log.d(TAG, "onResume");
         if (textureView.isAttachedToWindow() && PreviewSurfaceRdy)
             startCamera();
     }
@@ -104,6 +106,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
     @Override
     public void onPause() {
         super.onPause();
+        Log.d(TAG, "onPause");
         stopPreview();
         stopCamera();
     }
@@ -111,24 +114,27 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
     @Override
     public void onCameraOpen(final String message)
     {
+        Log.d(TAG, "onCameraOpen, initCamera");
         mBackgroundHandler.initCamera();
     }
 
     @Override
     public void onCameraClose(String message)
     {
+        Log.d(TAG, "onCameraClose");
+        cameraIsOpen = false;
         mProcessor.kill();
         super.onCameraClose(message);
     }
 
     @Override
     public void onPreviewOpen(String message) {
-        parametersHandler.setManualSettingsToParameters();
+        Log.d(TAG, "onPreviewOpen");
     }
 
     @Override
     public void onPreviewClose(String message) {
-
+        Log.d(TAG, "onPreviewClose");
     }
 
     @Override
@@ -192,7 +198,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
 
     @Override
     public String getResString(int id) {
-        return AppSettingsManager.getInstance().getResString(id);
+        return SettingsManager.getInstance().getResString(id);
     }
 
     @Override
@@ -206,8 +212,11 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
         switch (message.what)
         {
             case MSG_START_CAMERA:
-                if (!cameraIsOpen)
-                    cameraIsOpen = cameraHolder.OpenCamera(AppSettingsManager.getInstance().GetCurrentCamera());
+                if (!cameraIsOpen) {
+                    Log.d(TAG, "Start Camera");
+                    cameraIsOpen = cameraHolder.OpenCamera(SettingsManager.getInstance().GetCurrentCamera());
+                } else
+                    Log.d(TAG, "Camera is already open");
                 break;
             case MSG_STOP_CAMERA:
                 Log.d(TAG, "Stop Camera");
@@ -215,11 +224,11 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
                 cameraIsOpen = false;
                 break;
             case MSG_RESTART_CAMERA:
-                Log.d(TAG, "Stop Camera");
+                Log.d(TAG, "Restart Camera");
                 cameraHolder.CloseCamera();
                 cameraIsOpen = false;
                 if (!cameraIsOpen)
-                    cameraIsOpen = cameraHolder.OpenCamera(AppSettingsManager.getInstance().GetCurrentCamera());
+                    cameraIsOpen = cameraHolder.OpenCamera(SettingsManager.getInstance().GetCurrentCamera());
                 break;
             case MSG_START_PREVIEW:
                 Log.d(TAG, "Start Preview");
@@ -241,7 +250,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
                 ((CameraHolderApi2)cameraHolder).SetSurface(textureView);
                 Log.d(TAG, "Camera Opened and Preview Started");
                 Camera2Fragment.super.onCameraOpen("");
-                moduleHandler.setModule(AppSettingsManager.getInstance().GetCurrentModule());
+                moduleHandler.setModule(SettingsManager.getInstance().GetCurrentModule());
                 Camera2Fragment.this.onCameraOpenFinish("");
                 break;
             case MSG_CREATE_CAMERA:
@@ -249,5 +258,13 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
                 break;
         }
 
+    }
+
+    @Override
+    public void onFirstFrame() {
+        Log.d(TAG,"onFirstFrame");
+        //workaround, that seem to kill front camera when switching picformat
+        if (!SettingsManager.getInstance().getIsFrontCamera())
+            parametersHandler.setManualSettingsToParameters();
     }
 }
