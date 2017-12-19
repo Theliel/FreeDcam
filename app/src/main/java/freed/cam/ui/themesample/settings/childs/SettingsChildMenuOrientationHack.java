@@ -26,8 +26,9 @@ import com.troop.freedcam.R;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.camera1.Camera1Fragment;
 import freed.cam.apis.camera1.parameters.ParametersHandler;
-import freed.settings.SettingsManager;
+import freed.cam.apis.camera2.Camera2Fragment;
 import freed.settings.Settings;
+import freed.settings.SettingsManager;
 
 /**
  * Created by troop on 21.07.2015.
@@ -57,7 +58,7 @@ public class SettingsChildMenuOrientationHack extends SettingsChildMenu
     @Override
     public void SetValue(String value)
     {
-        if (value.equals(SettingsManager.getInstance().getResString(R.string.on)))
+        if (value.equals(SettingsManager.getInstance().getResString(R.string.on_)))
             SettingsManager.get(Settings.orientationHack).setBoolean(true);
         else
             SettingsManager.get(Settings.orientationHack).setBoolean(false);
@@ -65,10 +66,9 @@ public class SettingsChildMenuOrientationHack extends SettingsChildMenu
             ((ParametersHandler) cameraUiWrapper.getParameterHandler()).SetCameraRotation();
             cameraUiWrapper.getParameterHandler().SetPictureOrientation(0);
         }
-        else if(cameraUiWrapper instanceof Camera1Fragment)
+        else if(cameraUiWrapper instanceof Camera2Fragment)
         {
-            ((Camera1Fragment) cameraUiWrapper).cameraHolder.StopPreview();
-            ((Camera1Fragment) cameraUiWrapper).cameraHolder.StartPreview();
+            ((Camera2Fragment) cameraUiWrapper).restartCamera();
 
         }
         onStringValueChanged(value);

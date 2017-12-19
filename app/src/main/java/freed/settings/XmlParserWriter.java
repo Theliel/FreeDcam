@@ -365,10 +365,17 @@ public class XmlParserWriter
     }
 
     private void getDngStuff(LongSparseArray<DngProfile> map, XmlElement device_element, HashMap<String, CustomMatrix> matrixHashMap) {
-        if (!device_element.getAttribute("opcode2", "").isEmpty())
-            SettingsManager.getInstance().opcodeUrlList[0] = device_element.getAttribute("opcode2", "");
-        if (!device_element.getAttribute("opcode3", "").isEmpty())
-            SettingsManager.getInstance().opcodeUrlList[1] = device_element.getAttribute("opcode3", "");
+        XmlElement opcodesList = device_element.findChild("opcodes");
+        List<XmlElement> opcodes = opcodesList.findChildren("camera");
+        SettingsManager.getInstance().opcodeUrlList = new ArrayList<>();
+        for (XmlElement opcodeItem : opcodes)
+        {
+            int camid = opcodeItem.getIntAttribute("id", 0);
+            String op2url = opcodeItem.findChild("opcode2").getValue();
+            String op3url = opcodeItem.findChild("opcode3").getValue();
+            OpCodeUrl url =new OpCodeUrl(camid,op2url,op3url);
+            SettingsManager.getInstance().opcodeUrlList.add(url);
+        }
 
         Log.d(TAG, device_element.dumpChildElementsTagNames());
         List<XmlElement> fsizeList = device_element.findChildren("filesize");
@@ -465,6 +472,13 @@ public class XmlParserWriter
             writer = new BufferedWriter(new FileWriter(configFile));
             writer.write("<devices>" + "\r\n");
             writer.write("<device name = \""+ mDevice +"\">\r\n");
+
+            writer.write("<opcodes>\r\n");
+            for (OpCodeUrl url : SettingsManager.getInstance().opcodeUrlList)
+            {
+                writer.write(url.getXml());
+            }
+            writer.write("</opcodes>\r\n");
 
             for (int i =0; i< dngProfileList.size();i++)
             {

@@ -29,8 +29,10 @@ import com.troop.freedcam.R;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import freed.dng.CustomMatrix;
@@ -239,7 +241,7 @@ public class SettingsManager {
 
 
 
-    public String[] opcodeUrlList;
+    public List<OpCodeUrl> opcodeUrlList;
 
 
     private SharedPreferences settings;
@@ -405,29 +407,39 @@ public class SettingsManager {
         else //load only stuff for dng
         {
             Log.d(TAG, "load dngProfiles");
-            opcodeUrlList = new String[2];
+            opcodeUrlList = new ArrayList<>();
             dngProfileHashMap = parser.getDngProfiles(matrixes);
         }
     }
 
     private void loadOpCodes()
     {
-        File op2 = new File(StringUtils.GetFreeDcamConfigFolder+"opc2.bin");
-        if (op2.exists())
-            try {
-                opcode2 = RawToDng.readFile(op2);
-                Log.d(TAG, "opcode2 size" + opcode2.length);
-            } catch (IOException e) {
-                Log.WriteEx(e);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                File op2 = new File(StringUtils.GetFreeDcamConfigFolder+ currentcamera+"opc2.bin");
+                if (op2.exists())
+                    try {
+                        opcode2 = RawToDng.readFile(op2);
+                        Log.d(TAG, "opcode2 size" + opcode2.length);
+                    } catch (IOException e) {
+                        Log.WriteEx(e);
+                    }
+                    else
+                        opcode2 = null;
+                File op3 = new File(StringUtils.GetFreeDcamConfigFolder+currentcamera+"opc3.bin");
+                if (op3.exists())
+                    try {
+                        opcode3 = RawToDng.readFile(op3);
+                        Log.d(TAG, "opcode3 size" + opcode3.length);
+                    } catch (IOException e) {
+                        Log.WriteEx(e);
+                    }
+                    else
+                        opcode3 = null;
             }
-        File op3 = new File(StringUtils.GetFreeDcamConfigFolder+"opc3.bin");
-        if (op3.exists())
-            try {
-                opcode3 = RawToDng.readFile(op3);
-                Log.d(TAG, "opcode3 size" + opcode3.length);
-            } catch (IOException e) {
-                Log.WriteEx(e);
-            }
+        }).start();
+
     }
 
     public void RESET()
@@ -591,6 +603,7 @@ public class SettingsManager {
     public void SetCurrentCamera(int currentcamera) {
         this.currentcamera = currentcamera;
         settings.edit().putInt(CURRENTCAMERA, currentcamera).commit();
+        loadOpCodes();
     }
 
     public int GetCurrentCamera() {
@@ -638,6 +651,16 @@ public class SettingsManager {
 
     public boolean hasCamera2Features() {
         return settings.getBoolean(HAS_CAMERA2_FEATURES,false);
+    }
+
+    public void setCamerasCount(int count)
+    {
+        setApiInt("camerascount",count);
+    }
+
+    public int getCamerasCount()
+    {
+        return getApiInt("camerascount");
     }
 
     private String getApiString(String valueToGet, String defaultValue) {

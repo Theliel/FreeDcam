@@ -1,23 +1,4 @@
-/*
- *
- *     Copyright (C) 2015 Ingo Fuchs
- *     This program is free software; you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation; either version 2 of the License, or
- *     (at your option) any later version.
- *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License along
- *     with this program; if not, write to the Free Software Foundation, Inc.,
- *     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * /
- */
-
-package freed.cam.apis.camera1.parameters.modes;
+package freed.cam.ui.themesample.settings.opcode;
 
 import android.text.TextUtils;
 
@@ -32,8 +13,6 @@ import java.net.URL;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -42,87 +21,56 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import freed.cam.apis.basecamera.parameters.AbstractParameter;
+import freed.image.ImageTask;
 import freed.settings.OpCodeUrl;
-import freed.settings.SettingsManager;
-import freed.utils.FreeDPool;
 import freed.utils.Log;
 import freed.utils.StringUtils;
 
-
 /**
- * Created by troop on 28.04.2016.
+ * Created by KillerInk on 18.12.2017.
  */
-public class OpCodeParameter extends AbstractParameter
-{
-    private final String TAG = OpCodeParameter.class.getSimpleName();
-    private final boolean isSupported;
 
-    public OpCodeParameter()
+public class OpCodeDownloadTask extends ImageTask {
+
+    public interface DownloadEvents
     {
-        isSupported = SettingsManager.getInstance().opcodeUrlList.size() > 0;
+        void onError(String msg);
+        void onComplete();
     }
 
-    //https://github.com/troop/FreeDcam/blob/master/camera1_opcodes/HTC_OneA9/opc2.bin?raw=true
-    @Override
-    public void SetValue(String valueToSet, boolean setToCamera)
+    private OpCodeUrl url;
+    private DownloadEvents eventslistner;
+
+    private final String TAG = OpCodeDownloadTask.class.getSimpleName();
+
+    public OpCodeDownloadTask(OpCodeUrl opCodeUrl, DownloadEvents eventslistner)
     {
-        if(valueToSet.equals("Download")) {
-            for (final OpCodeUrl url : SettingsManager.getInstance().opcodeUrlList)
-            {
-                if (!TextUtils.isEmpty(url.getOpcode2Url()))
-                    FreeDPool.Execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                httpsGet(url.getOpcode2Url(), url.getID() + "opc2.bin");
-                            } catch (IOException ex) {
-                                Log.WriteEx(ex);
-                            }
-                        }
-                    });
-                if (!TextUtils.isEmpty(url.getOpcode3Url()))
-                    FreeDPool.Execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                httpsGet(url.getOpcode3Url(), url.getID() + "opc3.bin");
-                            } catch (IOException ex) {
-                                Log.WriteEx(ex);
-                            }
-                        }
-                    });
+        this.url = opCodeUrl;
+        this.eventslistner = eventslistner;
+    }
+
+    @Override
+    public boolean process() {
+        if (!TextUtils.isEmpty(url.getOpcode2Url()))
+            try {
+                httpsGet(url.getOpcode2Url(), url.getID() + "opc2.bin");
+            } catch (IOException ex) {
+                Log.WriteEx(ex);
             }
-        }
+        if (!TextUtils.isEmpty(url.getOpcode3Url()))
+            try {
+                httpsGet(url.getOpcode3Url(), url.getID() + "opc3.bin");
+            } catch (IOException ex) {
+                Log.WriteEx(ex);
+            }
+            if (eventslistner != null)
+                eventslistner.onComplete();
+        return false;
     }
 
-    @Override
-    public boolean IsSupported() {
-        return isSupported;
-    }
-
-    @Override
-    public String GetStringValue() {
-        return "true";
-    }
-
-    @Override
-    public String[] getStringValues() {
-        List<String> list = new ArrayList<>();
-
-        if (SettingsManager.getInstance().opcodeUrlList.size() >0)
-            list.add("Download");
-        else list.add("No Opcode avail");
-        return list.toArray(new String[list.size()]);
-    }
-
-    @Override
-    public boolean IsVisible() {
-        return isSupported;
-    }
 
     private void httpsGet(String url, String fileending) throws IOException {
-        HttpsURLConnection  httpConn = null;
+        HttpsURLConnection httpConn = null;
         InputStream inputStream = null;
 
         // Open connection and input stream
@@ -130,7 +78,7 @@ public class OpCodeParameter extends AbstractParameter
             trustAllHosts();
             URL urlObj = new URL(url);
             httpConn = (HttpsURLConnection ) urlObj.openConnection();
-            httpConn.setHostnameVerifier(OpCodeParameter.DO_NOT_VERIFY);
+            httpConn.setHostnameVerifier(DO_NOT_VERIFY);
             httpConn.setRequestMethod("GET");
             httpConn.setConnectTimeout(15000);
             httpConn.setReadTimeout(3000);
@@ -188,7 +136,6 @@ public class OpCodeParameter extends AbstractParameter
             } catch (IOException e) {
                 Log.w(TAG, "IOException while closing InputStream");
             }
-            fireStringValueChanged("true");
         }
     }
 
