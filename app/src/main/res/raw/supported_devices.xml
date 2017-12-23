@@ -2617,12 +2617,23 @@
         <models><item>MI 6</item></models>
         <camera1>
             <dngmanual>false</dngmanual>
-            <digitalimagestab>false</digitalimagestab>
+            <opticalimagestab>
+                <key>ois</key>
+                <values>enable,disable</values>
+            </opticalimagestab>
         </camera1>
 
         <opcodes>
             <camera id="0">
                 <opcode2>https://github.com/KillerInk/FreeDcam_opcodes/blob/master/XiaomiMi6/opc2.bin?raw=true</opcode2>
+                <opcode3>https://github.com/KillerInk/FreeDcam_opcodes/blob/master/XiaomiMi6/opc3.bin?raw=true</opcode3>
+            </camera>
+            <camera id="1">
+                <opcode2>https://github.com/Theliel/FreeDcam_opcodes/blob/master/XiaomiMi6/opc2_front.bin?raw=true</opcode2>
+                <opcode3>https://github.com/KillerInk/FreeDcam_opcodes/blob/master/XiaomiMi6/opc3.bin?raw=true</opcode3>
+            </camera>
+            <camera id="2">
+                <opcode2>https://github.com/Theliel/FreeDcam_opcodes/blob/master/XiaomiMi6/opc2_aux.bin?raw=true</opcode2>
                 <opcode3>https://github.com/KillerInk/FreeDcam_opcodes/blob/master/XiaomiMi6/opc3.bin?raw=true</opcode3>
             </camera>
         </opcodes>
