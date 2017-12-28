@@ -53,8 +53,8 @@ import freed.cam.apis.camera1.parameters.manual.mtk.AE_Handler_MTK;
 import freed.cam.apis.camera1.parameters.manual.mtk.FocusManualMTK;
 import freed.cam.apis.camera1.parameters.manual.qcom.BaseISOManual;
 import freed.cam.apis.camera1.parameters.manual.qcom.BurstManualParam;
+import freed.cam.apis.camera1.parameters.manual.shutter.ExposureTime_MS;
 import freed.cam.apis.camera1.parameters.manual.shutter.ExposureTime_MicroSec;
-import freed.cam.apis.camera1.parameters.manual.shutter.ExposureTime_MilliSec;
 import freed.cam.apis.camera1.parameters.manual.shutter.ShutterManualG2pro;
 import freed.cam.apis.camera1.parameters.manual.shutter.ShutterManualMeizu;
 import freed.cam.apis.camera1.parameters.manual.shutter.ShutterManualParameterHTC;
@@ -117,7 +117,7 @@ public class ParametersHandler extends AbstractParameterHandler
         super(cameraUiWrapper);
     }
 
-    public synchronized void SetParametersToCamera(Parameters params)
+    public void SetParametersToCamera(Parameters params)
     {
         Log.d(TAG, "SetParametersToCam");
         ((CameraHolder) cameraUiWrapper.getCameraHolder()).SetCameraParameters(params);
@@ -140,10 +140,18 @@ public class ParametersHandler extends AbstractParameterHandler
         Log.d(TAG, "Model:" + Build.MODEL);
         Log.d(TAG, "Product:" + Build.PRODUCT);
         Log.d(TAG, "OS:" + System.getProperty("os.version"));
-        String[] split = parameters.flatten().split(";");
-        for(String e : split)
-        {
-            Log.d(TAG,e);
+        if (parameters != null) {
+            try {
+                String[] split = parameters.flatten().split(";");
+                for (String e : split) {
+                    Log.d(TAG, e);
+                }
+            }
+            catch (NullPointerException ex)
+            {
+                Log.WriteEx(ex);
+            }
+
         }
     }
 
@@ -266,13 +274,22 @@ public class ParametersHandler extends AbstractParameterHandler
                     //HDRMode = new MorphoHdrModeParameters(cameraParameters,cameraUiWrapper,appS.hdrMode);
                     break;
                 case SettingsManager.HDR_AUTO:
-                    add(Settings.HDRMode, new AutoHdrMode(cameraParameters,cameraUiWrapper,appS.get(Settings.HDRMode)));
+                    AutoHdrMode autoHdrMode = new AutoHdrMode(cameraParameters,cameraUiWrapper,appS.get(Settings.HDRMode));
+                    add(Settings.HDRMode, autoHdrMode);
+                    cameraUiWrapper.getModuleHandler().addListner(autoHdrMode);
+                    get(Settings.PictureFormat).addEventListner(autoHdrMode);
                     break;
                 case SettingsManager.HDR_LG:
-                    add(Settings.HDRMode,new LgHdrMode(cameraParameters,cameraUiWrapper,appS.get(Settings.HDRMode)));
+                    LgHdrMode lgHdrMode = new LgHdrMode(cameraParameters,cameraUiWrapper,appS.get(Settings.HDRMode));
+                    add(Settings.HDRMode,lgHdrMode);
+                    cameraUiWrapper.getModuleHandler().addListner(lgHdrMode);
+                    get(Settings.PictureFormat).addEventListner(lgHdrMode);
                     break;
                 case SettingsManager.HDR_MOTO:
-                    add(Settings.HDRMode, new MotoHDR(cameraParameters,cameraUiWrapper,appS.get(Settings.HDRMode)));
+                    MotoHDR motoHDR = new MotoHDR(cameraParameters,cameraUiWrapper,appS.get(Settings.HDRMode));
+                    add(Settings.HDRMode, motoHDR);
+                    cameraUiWrapper.getModuleHandler().addListner(motoHDR);
+                    get(Settings.PictureFormat).addEventListner(motoHDR);
                     break;
             }
         }
@@ -380,11 +397,11 @@ public class ParametersHandler extends AbstractParameterHandler
                     //HTCVideoMode = new BaseModeParameter(cameraParameters, cameraUiWrapper, "video-mode", "video-hfr-values");
                     add(Settings.M_ExposureTime, new ShutterManualParameterHTC(cameraParameters,cameraUiWrapper));
                     break;
+                case SHUTTER_QCOM_MILLISEC:
+                    add(Settings.M_ExposureTime, new ExposureTime_MS(cameraUiWrapper,cameraParameters));
+                    break;
                 case SHUTTER_QCOM_MICORSEC:
                     add(Settings.M_ExposureTime, new ExposureTime_MicroSec(cameraUiWrapper,cameraParameters));
-                    break;
-                case SHUTTER_QCOM_MILLISEC:
-                    add(Settings.M_ExposureTime, new ExposureTime_MilliSec(cameraUiWrapper,cameraParameters));
                     break;
                 case SHUTTER_MTK:
 
@@ -450,9 +467,11 @@ public class ParametersHandler extends AbstractParameterHandler
 
         add(Settings.M_ExposureCompensation, new ExposureManualParameter(cameraParameters, cameraUiWrapper,1));
 
-        add(Settings.M_FX, new FXManualParameter(cameraParameters, cameraUiWrapper));
-        get(Settings.PictureFormat).addEventListner(((BaseManualParameter) get(Settings.M_FX)).GetPicFormatListner());
-        cameraUiWrapper.getModuleHandler().addListner(((BaseManualParameter)get(Settings.M_FX)).GetModuleListner());
+        if (appS.get(Settings.M_FX).isSupported()) {
+            add(Settings.M_FX, new FXManualParameter(cameraParameters, cameraUiWrapper));
+            get(Settings.PictureFormat).addEventListner(((BaseManualParameter) get(Settings.M_FX)).GetPicFormatListner());
+            cameraUiWrapper.getModuleHandler().addListner(((BaseManualParameter) get(Settings.M_FX)).GetModuleListner());
+        }
 
         if (appS.get(Settings.M_Burst).isSupported()){
             add(Settings.M_Burst, new BurstManualParam(cameraParameters, cameraUiWrapper));
