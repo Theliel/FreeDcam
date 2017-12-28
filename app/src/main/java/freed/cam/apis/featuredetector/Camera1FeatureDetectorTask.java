@@ -467,15 +467,15 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
             else if (parameters.get(camstring(R.string.max_exposure_time)) != null && parameters.get(camstring(R.string.min_exposure_time)) != null) {
                 long min = 0, max = 0;
                 if (parameters.get(camstring(R.string.max_exposure_time)).contains(".")) {
-                    Log.d(TAG, "ManualExposureTime Qcom Microsec");
+                    Log.d(TAG, "ManualExposureTime Qcom Millisec");
                     min = (long) (Double.parseDouble(parameters.get(camstring(R.string.min_exposure_time))) * 1000);
                     max = (long) (Double.parseDouble(parameters.get(camstring(R.string.max_exposure_time))) * 1000);
-                    SettingsManager.get(Settings.M_ExposureTime).setType(SettingsManager.SHUTTER_QCOM_MICORSEC);
+                    SettingsManager.get(Settings.M_ExposureTime).setType(SettingsManager.SHUTTER_QCOM_MILLISEC);
                 } else {
-                    Log.d(TAG, "ManualExposureTime Qcom Millisec");
+                    Log.d(TAG, "ManualExposureTime Qcom MicroSec");
                     min = Integer.parseInt(parameters.get(camstring(R.string.min_exposure_time)));
                     max = Integer.parseInt(parameters.get(camstring(R.string.max_exposure_time)));
-                    SettingsManager.get(Settings.M_ExposureTime).setType(SettingsManager.SHUTTER_QCOM_MILLISEC);
+                    SettingsManager.get(Settings.M_ExposureTime).setType(SettingsManager.SHUTTER_QCOM_MICORSEC);
                 }
                 if (max > 0) {
 
@@ -764,11 +764,11 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
         }
         else {
             int min = 0, max = 0;
-            if (parameters.get(camstring(R.string.brightness_max)) != null) {
+            if (parameters.get(camstring(R.string.brightness_max)) != null && parameters.get(camstring(R.string.brightness_min)) != null) {
                 Log.d(TAG, "Brightness: Default");
                 min = Integer.parseInt(parameters.get(camstring(R.string.brightness_min)));
                 max = Integer.parseInt(parameters.get(camstring(R.string.brightness_max)));
-            } else if (parameters.get(camstring(R.string.max_brightness)) != null) {
+            } else if (parameters.get(camstring(R.string.max_brightness)) != null && parameters.get(camstring(R.string.min_brightness)) != null) {
                 min = Integer.parseInt(parameters.get(camstring(R.string.min_brightness)));
                 max = Integer.parseInt(parameters.get(camstring(R.string.max_brightness)));
                 Log.d(TAG, "Brightness: Default");
