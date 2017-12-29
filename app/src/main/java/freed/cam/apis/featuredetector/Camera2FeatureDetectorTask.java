@@ -15,9 +15,11 @@ import com.huawei.camera2ex.CameraCharacteristicsEx;
 import com.troop.freedcam.R;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import freed.settings.Settings;
 import freed.settings.SettingsManager;
@@ -334,7 +336,7 @@ public class Camera2FeatureDetectorTask extends AbstractFeatureDetectorTask {
             Log.e(TAG, "Unsupported HUAWEI_AVAILABLE_DUAL_PRIMARY  false");
         }
         try {
-            if (characteristics.get(CameraCharacteristicsEx.HUAWEI_PROFESSIONAL_MODE_SUPPORTED) == Byte.valueOf((byte)1))
+            if (Objects.equals(characteristics.get(CameraCharacteristicsEx.HUAWEI_PROFESSIONAL_MODE_SUPPORTED), Byte.valueOf((byte) 1)))
             {
                 int[] shutterminmax = characteristics.get(CameraCharacteristicsEx.HUAWEI_SENSOR_EXPOSURETIME_RANGE);
 
@@ -469,7 +471,7 @@ public class Camera2FeatureDetectorTask extends AbstractFeatureDetectorTask {
             colorcor = cameraCharacteristics.get(CameraCharacteristics.COLOR_CORRECTION_AVAILABLE_ABERRATION_MODES);
         else
             colorcor = new int[]{ 0,1,2};
-        Log.d(TAG, "colormodes:" + colorcor.toString());
+        Log.d(TAG, "colormodes:" + Arrays.toString(colorcor));
         String[] lookupar = SettingsManager.getInstance().getResources().getStringArray(R.array.colorcorrectionmodes);
 
         HashMap<String,Integer> map = new HashMap<>();
@@ -847,17 +849,16 @@ public class Camera2FeatureDetectorTask extends AbstractFeatureDetectorTask {
         int min = characteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_RANGE).getLower();
         float step = characteristics.get(CameraCharacteristics.CONTROL_AE_COMPENSATION_STEP).floatValue();
 
-        StringFloatArray ranges = new StringFloatArray((max*2)+1);
+        List<String> strings = new ArrayList<>();
         int t = 0;
         for (int i = min; i <= max; i++) {
-            String s = String.format("%.1f", i * step);
-            ranges.add(t++,s,i);
+            strings.add(String.format("%.1f", i * step));
         }
-        if (ranges.getSize() > 0)
+        if (strings.size() > 0)
             exposure.setIsSupported(true);
         else
             exposure.setIsSupported(false);
-        exposure.setValues(ranges.getStringArray());
+        exposure.setValues(strings.toArray(new String[strings.size()]));
     }
 
     private void detectManualexposureTime(CameraCharacteristics characteristics)
