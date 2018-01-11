@@ -24,6 +24,7 @@ import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build.VERSION;
@@ -33,6 +34,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.provider.DocumentFile;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
@@ -43,6 +45,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.troop.freedcam.R;
 import com.troop.freedcam.R.dimen;
 import com.troop.freedcam.R.id;
 import com.troop.freedcam.R.layout;
@@ -150,15 +153,20 @@ public class ScreenSlideFragment extends Fragment implements OnPageChangeListene
 
 
         bottombar =(LinearLayout)view.findViewById(id.bottom_bar);
+        Typeface typeface = ResourcesCompat.getFont(getContext(), R.font.freedcam);
 
         iso = (TextView)view.findViewById(id.textView_iso);
+        iso.setTypeface(typeface);
         iso.setText("");
         shutter = (TextView)view.findViewById(id.textView_shutter);
+        shutter.setTypeface(typeface);
         shutter.setText("");
         focal = (TextView)view.findViewById(id.textView_focal);
         focal.setText("");
+        focal.setTypeface(typeface);
         fnumber = (TextView)view.findViewById(id.textView_fnumber);
         fnumber.setText("");
+        fnumber.setTypeface(typeface);
         filename = (TextView)view.findViewById(id.textView_filename);
 
         play = (Button)view.findViewById(id.button_play);
@@ -181,7 +189,9 @@ public class ScreenSlideFragment extends Fragment implements OnPageChangeListene
                         i = new Intent(Intent.ACTION_EDIT);
                         i.setDataAndType(uri, "image/*");
                     }
+
                     Intent chooser = Intent.createChooser(i, "Choose App");
+                    chooser.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     //startActivity(i);
                     if (i.resolveActivity(getActivity().getPackageManager()) != null) {
                         startActivity(chooser);
@@ -435,7 +445,7 @@ public class ScreenSlideFragment extends Fragment implements OnPageChangeListene
                     exifHandler.setSHUTTERSPEED("");
                 else
                 {
-                    exifHandler.setSHUTTERSPEED("S:" + getShutterStringSeconds(Double.parseDouble(expostring)));
+                    exifHandler.setSHUTTERSPEED("\uE00B" + getShutterStringSeconds(Double.parseDouble(expostring)));
                 }
             }catch (NullPointerException e){
                 Log.WriteEx(e);
@@ -445,7 +455,7 @@ public class ScreenSlideFragment extends Fragment implements OnPageChangeListene
             {
                 String fnums = exifInterface.getAttribute(ExifInterface.TAG_F_NUMBER);
                 if (fnums != null)
-                    exifHandler.setFNUM("f~:" + fnums);
+                    exifHandler.setFNUM("\ue003" + fnums);
                 else
                     exifHandler.setFNUM("");
             }catch (NullPointerException e){
@@ -467,7 +477,7 @@ public class ScreenSlideFragment extends Fragment implements OnPageChangeListene
                         double foc = numerator /denumerator;
                         focs = foc+"";
                     }
-                    exifHandler.setFOCAL("A:" + focs);
+                    exifHandler.setFOCAL("\uE00c" + focs);
                 }
             }catch (NullPointerException e){
                 exifHandler.setFOCAL("");
@@ -476,7 +486,7 @@ public class ScreenSlideFragment extends Fragment implements OnPageChangeListene
             try {
                 String isos = exifInterface.getAttribute(ExifInterface.TAG_ISO_SPEED_RATINGS);
                 if (isos != null)
-                    exifHandler.setISO("ISO:" + isos);
+                    exifHandler.setISO("\uE002" + isos);
                 else
                     exifHandler.setISO("");
             }catch (NullPointerException e){

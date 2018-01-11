@@ -75,18 +75,18 @@ import freed.cam.apis.camera1.parameters.modes.PreviewFpsParameter;
 import freed.cam.apis.camera1.parameters.modes.PreviewSizeParameter;
 import freed.cam.apis.camera1.parameters.modes.VideoProfilesParameter;
 import freed.cam.apis.camera1.parameters.modes.VirtualLensFilter;
+import freed.settings.Frameworks;
 import freed.settings.SettingKeys;
 import freed.settings.SettingsManager;
 import freed.utils.Log;
 import freed.utils.StringUtils;
 import freed.utils.StringUtils.FileEnding;
 
-import static freed.settings.SettingsManager.FRAMEWORK_LG;
-import static freed.settings.SettingsManager.FRAMEWORK_MTK;
 import static freed.settings.SettingsManager.ISOMANUAL_KRILLIN;
 import static freed.settings.SettingsManager.ISOMANUAL_MTK;
 import static freed.settings.SettingsManager.ISOMANUAL_QCOM;
 import static freed.settings.SettingsManager.ISOMANUAL_SONY;
+import static freed.settings.SettingsManager.ISOMANUAL_Xiaomi;
 import static freed.settings.SettingsManager.SHUTTER_G2PRO;
 import static freed.settings.SettingsManager.SHUTTER_HTC;
 import static freed.settings.SettingsManager.SHUTTER_KRILLIN;
@@ -173,7 +173,7 @@ public class ParametersHandler extends AbstractParameterHandler
         SettingsManager appS = SettingsManager.getInstance();
 
         if (appS.get(SettingKeys.PictureSize).isSupported())
-            add(SettingKeys.PictureSize ,new PictureSizeParameter(cameraParameters, cameraUiWrapper));
+            add(SettingKeys.PictureSize ,new BaseModeParameter(cameraParameters, cameraUiWrapper,SettingKeys.PictureSize));
 
         if (appS.get(SettingKeys.FocusMode).isSupported()) {
             add(SettingKeys.FocusMode,new BaseModeParameter(cameraParameters, cameraUiWrapper,SettingKeys.FocusMode));
@@ -341,7 +341,7 @@ public class ParametersHandler extends AbstractParameterHandler
 
         if (SettingsManager.get(SettingKeys.M_Focus).isSupported())
         {
-            if (SettingsManager.getInstance().getFrameWork() == FRAMEWORK_MTK)
+            if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
             {
                 add(SettingKeys.M_Focus, new FocusManualMTK(cameraParameters, cameraUiWrapper,SettingKeys.M_Focus));
             }
@@ -349,7 +349,7 @@ public class ParametersHandler extends AbstractParameterHandler
             {
                 //htc mf
                 if (appS.get(SettingKeys.M_Focus).getKEY().equals(cameraUiWrapper.getResString(R.string.focus)))
-                     add(SettingKeys.M_Focus, new FocusManualParameterHTC(cameraParameters,cameraUiWrapper));
+                     add(SettingKeys.M_Focus, new FocusManualParameterHTC(cameraParameters,cameraUiWrapper,SettingKeys.M_Focus));
                     //huawai mf
                 else if (appS.get(SettingKeys.M_Focus).getKEY().equals(SettingsManager.getInstance().getResString(R.string.hw_manual_focus_step_value)))
                     add(SettingKeys.M_Focus, new FocusManualHuawei(cameraParameters, cameraUiWrapper, SettingKeys.M_Focus));
@@ -377,9 +377,9 @@ public class ParametersHandler extends AbstractParameterHandler
         if (appS.get(SettingKeys.LensFilter).isSupported())
             add(SettingKeys.LensFilter, new VirtualLensFilter(cameraParameters,cameraUiWrapper));
 
-        if (appS.getFrameWork() == FRAMEWORK_LG)//its needed else cam ignores manuals like shutter and iso
+        if (appS.getFrameWork() == Frameworks.LG)//its needed else cam ignores manuals like shutter and iso
             cameraParameters.set("lge-camera","1");
-        else  if (appS.getFrameWork() == FRAMEWORK_MTK){
+        else  if (appS.getFrameWork() == Frameworks.MTK){
             cameraParameters.set("afeng_raw_dump_flag", "1");
             cameraParameters.set("rawsave-mode", "2");
             cameraParameters.set("isp-mode", "1");
@@ -393,10 +393,10 @@ public class ParametersHandler extends AbstractParameterHandler
             {
                 case SHUTTER_HTC:
                     //HTCVideoMode = new BaseModeParameter(cameraParameters, cameraUiWrapper, "video-mode", "video-hfr-values");
-                    add(SettingKeys.M_ExposureTime, new ShutterManualParameterHTC(cameraParameters,cameraUiWrapper));
+                    add(SettingKeys.M_ExposureTime, new ShutterManualParameterHTC(cameraParameters,cameraUiWrapper, SettingKeys.M_ExposureTime));
                     break;
                 case SHUTTER_QCOM_MILLISEC:
-                    add(SettingKeys.M_ExposureTime, new ExposureTime_MS(cameraUiWrapper,cameraParameters));
+                    add(SettingKeys.M_ExposureTime, new ExposureTime_MS(cameraUiWrapper,cameraParameters,SettingKeys.M_ExposureTime));
                     break;
                 case SHUTTER_QCOM_MICORSEC:
                     add(SettingKeys.M_ExposureTime, new ExposureTime_MicroSec(cameraUiWrapper,cameraParameters));
@@ -421,7 +421,7 @@ public class ParametersHandler extends AbstractParameterHandler
                     add(SettingKeys.M_ExposureTime, new ShutterManualSony(cameraParameters,cameraUiWrapper));
                     break;
                 case SHUTTER_G2PRO:
-                    add(SettingKeys.M_ExposureTime, new ShutterManualG2pro(cameraParameters,cameraUiWrapper));
+                    add(SettingKeys.M_ExposureTime, new ShutterManualG2pro(cameraParameters,cameraUiWrapper,SettingKeys.M_ExposureTime));
                     break;
                 case SHUTTER_ZTE:
                     add(SettingKeys.M_ExposureTime, new ShutterManualZTE(cameraParameters,cameraUiWrapper));
@@ -439,13 +439,16 @@ public class ParametersHandler extends AbstractParameterHandler
             switch (appS.get(SettingKeys.M_ManualIso).getType())
             {
                 case ISOMANUAL_QCOM:
-                    add(SettingKeys.M_ManualIso, new BaseISOManual(cameraParameters,cameraUiWrapper));
+                    add(SettingKeys.M_ManualIso, new BaseISOManual(cameraParameters,cameraUiWrapper,SettingKeys.M_ManualIso));
                     break;
                 case ISOMANUAL_SONY:
-                    add(SettingKeys.M_ManualIso, new ManualIsoSony(cameraUiWrapper,cameraParameters));
+                    add(SettingKeys.M_ManualIso, new ManualIsoSony(cameraUiWrapper,cameraParameters,SettingKeys.M_ManualIso));
                     break;
                 case ISOMANUAL_KRILLIN:
-                    add(SettingKeys.M_ManualIso,  new ManualIsoKrilin(cameraParameters,cameraUiWrapper));
+                    add(SettingKeys.M_ManualIso,  new ManualIsoKrilin(cameraParameters,cameraUiWrapper,SettingKeys.M_ManualIso));
+                    break;
+                case ISOMANUAL_Xiaomi :
+                    add(SettingKeys.M_ManualIso, new BaseManualParameter(cameraParameters,cameraUiWrapper,SettingKeys.M_ManualIso));
                     break;
                 case ISOMANUAL_MTK: //get set due aehandler
                     break;
@@ -457,28 +460,22 @@ public class ParametersHandler extends AbstractParameterHandler
             add(SettingKeys.M_Fnumber, new ManualAperture(cameraUiWrapper,cameraParameters));
 
         if (appS.get(SettingKeys.M_Whitebalance).isSupported())
-            add(SettingKeys.M_Whitebalance, new BaseCCTManual(cameraParameters,cameraUiWrapper));
+            add(SettingKeys.M_Whitebalance, new BaseCCTManual(cameraParameters,cameraUiWrapper,SettingKeys.M_Whitebalance));
 
-        add(SettingKeys.M_3D_Convergence, new BaseManualParameter(cameraParameters,
-                cameraUiWrapper.getResString(R.string.manual_convergence),
-                cameraUiWrapper.getResString(R.string.supported_manual_convergence_max),
-                cameraUiWrapper.getResString(R.string.supported_manual_convergence_min),
-                cameraUiWrapper,1));
-
-        add(SettingKeys.M_ExposureCompensation, new ExposureManualParameter(cameraParameters, cameraUiWrapper,1));
+        add(SettingKeys.M_ExposureCompensation, new ExposureManualParameter(cameraParameters, cameraUiWrapper,SettingKeys.M_ExposureCompensation));
 
         if (appS.get(SettingKeys.M_FX).isSupported()) {
-            add(SettingKeys.M_FX, new FXManualParameter(cameraParameters, cameraUiWrapper));
+            add(SettingKeys.M_FX, new FXManualParameter(cameraParameters, cameraUiWrapper,SettingKeys.M_FX));
             get(SettingKeys.PictureFormat).addEventListner(((BaseManualParameter) get(SettingKeys.M_FX)).GetPicFormatListner());
             cameraUiWrapper.getModuleHandler().addListner(((BaseManualParameter) get(SettingKeys.M_FX)).GetModuleListner());
         }
 
         if (appS.get(SettingKeys.M_Burst).isSupported()){
-            add(SettingKeys.M_Burst, new BurstManualParam(cameraParameters, cameraUiWrapper));
+            add(SettingKeys.M_Burst, new BurstManualParam(cameraParameters, cameraUiWrapper,SettingKeys.M_Burst));
             cameraUiWrapper.getModuleHandler().addListner(((BaseManualParameter) get(SettingKeys.M_Burst)).GetModuleListner());
         }
 
-        add(SettingKeys.M_Zoom, new ZoomManualParameter(cameraParameters, cameraUiWrapper));
+        add(SettingKeys.M_Zoom, new ZoomManualParameter(cameraParameters, cameraUiWrapper,SettingKeys.M_Zoom));
 
         if (appS.get(SettingKeys.dualPrimaryCameraMode).isSupported())
             add(SettingKeys.dualPrimaryCameraMode, new BaseModeParameter(cameraParameters,cameraUiWrapper,SettingKeys.dualPrimaryCameraMode));
@@ -547,7 +544,7 @@ public class ParametersHandler extends AbstractParameterHandler
     public float getCurrentExposuretime()
     {
         Camera.Parameters parameters = ((CameraHolder) cameraUiWrapper.getCameraHolder()).GetCameraParameters();
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK) {
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK) {
             if (parameters.get(SettingsManager.getInstance().getResString(R.string.eng_capture_shutter_speed)) != null) {
                 if (Float.parseFloat(parameters.get(SettingsManager.getInstance().getResString(R.string.eng_capture_shutter_speed))) == 0) {
                     return 0;
@@ -572,7 +569,7 @@ public class ParametersHandler extends AbstractParameterHandler
     @Override
     public int getCurrentIso() {
         Camera.Parameters parameters = ((CameraHolder) cameraUiWrapper.getCameraHolder()).GetCameraParameters();
-        if (SettingsManager.getInstance().getFrameWork() == FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             if(parameters.get(SettingsManager.getInstance().getResString(R.string.eng_capture_sensor_gain))!= null) {
                 if (Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.eng_capture_sensor_gain))) == 0) {

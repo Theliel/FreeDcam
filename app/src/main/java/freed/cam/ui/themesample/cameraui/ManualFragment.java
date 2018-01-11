@@ -176,11 +176,7 @@ public class ManualFragment extends AbstractFragment implements OnSeekBarChangeL
                 btn.setOnClickListener(manualButtonClickListner);
                 manualItemsHolder.addView(btn);
             }
-            if (parms.get(SettingKeys.M_3D_Convergence) != null) {
-                ManualButton btn = new ManualButton(getContext(), parms.get(SettingKeys.M_3D_Convergence), R.drawable.manual_convergence);
-                btn.setOnClickListener(manualButtonClickListner);
-                manualItemsHolder.addView(btn);
-            }
+
             if (parms.get(SettingKeys.M_FX) != null) {
                 ManualButton btn = new ManualButton(getContext(), parms.get(SettingKeys.M_FX), R.drawable.manual_fx);
                 btn.setOnClickListener(manualButtonClickListner);
@@ -223,8 +219,9 @@ public class ManualFragment extends AbstractFragment implements OnSeekBarChangeL
             }*/
             if (parms.get(SettingKeys.TONE_CURVE_PARAMETER) != null)
             {
-                ManualButton btn = new ManualButton(getContext(), parms.get(SettingKeys.TONE_CURVE_PARAMETER), R.drawable.manual_midtones);
+                ManualButtonToneCurve btn = new ManualButtonToneCurve(getContext(), parms.get(SettingKeys.TONE_CURVE_PARAMETER), R.drawable.manual_midtones);
                 btn.setOnClickListener(manualButtonClickListner);
+                btn.onStringValueChanged("");
                 manualItemsHolder.addView(btn);
             }
             curveView.setVisibility(View.GONE);

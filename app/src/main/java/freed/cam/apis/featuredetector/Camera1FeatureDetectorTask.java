@@ -1,6 +1,7 @@
 package freed.cam.apis.featuredetector;
 
 import android.hardware.Camera;
+import android.os.Build;
 import android.text.TextUtils;
 
 import com.lge.hardware.LGCameraRef;
@@ -14,6 +15,8 @@ import java.util.List;
 
 import freed.cam.apis.camera1.cameraholder.CameraHolderLegacy;
 import freed.cam.apis.camera1.cameraholder.CameraHolderMTK;
+import freed.settings.FrameworkDetector;
+import freed.settings.Frameworks;
 import freed.settings.SettingKeys;
 import freed.settings.mode.SettingMode;
 import freed.settings.SettingsManager;
@@ -48,7 +51,8 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
         publishProgress("Device:"+ SettingsManager.getInstance().getDeviceString());
         //detect frameworks
-        SettingsManager.getInstance().setFramework(getFramework());
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.Default)
+            SettingsManager.getInstance().setFramework(FrameworkDetector.getFramework());
         publishProgress("FrameWork:"+ SettingsManager.getInstance().getFrameWork());
 
 
@@ -285,7 +289,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
     private void detectManualWhiteBalance(Camera.Parameters parameters) {
         if (SettingsManager.get(SettingKeys.M_Whitebalance).isPresetted())
             return;
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
             SettingsManager.get(SettingKeys.M_Whitebalance).setIsSupported(false);
         else if (SettingsManager.get(SettingKeys.M_Whitebalance).isSupported()) // happens when its already set due supportedevices.xml
             return;
@@ -351,19 +355,31 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
         Log.d(TAG, "Manual Iso Presetted:" + SettingsManager.get(SettingKeys.M_ManualIso).isPresetted());
         if (!SettingsManager.get(SettingKeys.M_ManualIso).isPresetted()) {
 
-            if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK) {
+            if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK) {
                 SettingsManager.get(SettingKeys.M_ManualIso).setIsSupported(true);
                 SettingsManager.get(SettingKeys.M_ManualIso).setKEY("m-sr-g");
                 SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(100, 1600, 100));
                 SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_MTK);
-            } else {
+            }
+            else {
                 if (parameters.get(SettingsManager.getInstance().getResString(R.string.min_iso)) != null && parameters.get(SettingsManager.getInstance().getResString(R.string.max_iso)) != null) {
                     SettingsManager.get(SettingKeys.M_ManualIso).setIsSupported(true);
-                    SettingsManager.get(SettingKeys.M_ManualIso).setKEY(SettingsManager.getInstance().getResString(R.string.continuous_iso));
+
+                    if (SettingsManager.getInstance().getFrameWork() == Frameworks.Xiaomi)
+                    {
+                        SettingsManager.get(SettingKeys.M_ManualIso).setKEY(SettingsManager.getInstance().getResString(R.string.iso));
+                        SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_Xiaomi);
+                    }
+                    else
+                    {
+                        SettingsManager.get(SettingKeys.M_ManualIso).setKEY(SettingsManager.getInstance().getResString(R.string.continuous_iso));
+                        SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_QCOM);
+                    }
+
                     int min = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.min_iso)));
                     int max = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.max_iso)));
                     SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(min, max, 50));
-                    SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_QCOM);
+
                 }
                 else if (parameters.get(SettingsManager.getInstance().getResString(R.string.hw_sensor_iso_range))!= null)
                 {
@@ -404,7 +420,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
         if (SettingsManager.get(SettingKeys.M_ExposureTime).isPresetted())
             return;
         //mtk shutter
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             Log.d(TAG, "ManualExposureTime MTK");
             SettingsManager.get(SettingKeys.M_ExposureTime).setIsSupported(true);
@@ -534,7 +550,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectTNR(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.TNR).setIsSupported(false);
             SettingsManager.get(SettingKeys.TNR_V).setIsSupported(false);
@@ -550,7 +566,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectPDAF(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.PDAF).setIsSupported(false);
             return;
@@ -564,7 +580,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectSEEMoar(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.SeeMore).setIsSupported(false);
             return;
@@ -578,7 +594,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectRefocus(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.ReFocus).setIsSupported(false);
             return;
@@ -592,7 +608,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectRDI(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.RDI).setIsSupported(false);
             return;
@@ -606,7 +622,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectOptizoom(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.OptiZoom).setIsSupported(false);
             return;
@@ -620,7 +636,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectChromaFlash(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.ChromaFlash).setIsSupported(false);
             return;
@@ -634,7 +650,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectTruePotrait(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.TruePotrait).setIsSupported(false);
             return;
@@ -651,7 +667,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
         Log.d(TAG, "Denoise is Presetted: "+ SettingsManager.get(SettingKeys.Denoise).isPresetted());
         if (SettingsManager.get(SettingKeys.Denoise).isPresetted())
             return;
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             if(parameters.get(camstring(R.string.mtk_3dnr_mode))!=null) {
                 if (parameters.get(camstring(R.string.mtk_3dnr_mode_values)).equals("on,off")) {
@@ -670,7 +686,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
     private void detectDisModes(Camera.Parameters parameters) {
         if (SettingsManager.get(SettingKeys.DigitalImageStabilization).isPresetted())
             return;
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK) {
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK) {
             SettingsManager.get(SettingKeys.DigitalImageStabilization).setIsSupported(false);
         } else{
             detectMode(parameters,R.string.dis,R.string.dis_values, SettingsManager.get(SettingKeys.DigitalImageStabilization));
@@ -679,7 +695,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
 
     private void detectManualSaturation(Camera.Parameters parameters)
     {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             Log.d(TAG, "Saturation: MTK");
             if (parameters.get(camstring(R.string.saturation))!= null && parameters.get(camstring(R.string.saturation_values))!= null) {
@@ -721,7 +737,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
     }
 
     private void detectManualSharpness(Camera.Parameters parameters) {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             Log.d(TAG, "Sharpness: MTK");
             if (parameters.get(camstring(R.string.edge))!= null && parameters.get(camstring(R.string.edge_values))!= null) {
@@ -755,7 +771,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
     }
 
     private void detectManualBrightness(Camera.Parameters parameters) {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             Log.d(TAG, "Brightness: MTK");
             if (parameters.get(camstring(R.string.brightness))!= null && parameters.get(camstring(R.string.brightness_values))!= null) {
@@ -790,7 +806,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
     }
 
     private void detectManualContrast(Camera.Parameters parameters) {
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             if (parameters.get(camstring(R.string.contrast))!= null && parameters.get(camstring(R.string.contrast_values))!= null) {
                 SettingsManager.get(SettingKeys.M_Contrast).setValues(parameters.get(camstring(R.string.contrast_values)).split(","));
@@ -837,7 +853,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
             return;
 
         int min =0, max =0, step = 0;
-        if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             SettingsManager.get(SettingKeys.M_Focus).setMode(camstring(R.string.manual));
             SettingsManager.get(SettingKeys.M_Focus).setType(-1);
@@ -937,75 +953,6 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
             SettingsManager.getInstance().setIsFrontCamera(true);
     }
 
-    private static boolean hasLGFramework()
-    {
-        try {
-            Class c = Class.forName("com.lge.hardware.LGCameraRef");
-            Log.d(TAG, "Has Lg Framework");
-            c = Class.forName("com.lge.media.CamcorderProfileEx");
-            Log.d(TAG, "Has Lg Framework");
-            return true;
-
-        } catch (ClassNotFoundException|NullPointerException|UnsatisfiedLinkError | ExceptionInInitializerError e) {
-
-            Log.d(TAG, "No LG Framework");
-            return false;
-        }
-    }
-
-    private static boolean isMotoExt()
-    {
-        try {
-            Class c = Class.forName("com.motorola.android.camera.CameraMotExt");
-            Log.d(TAG, "Has Moto Framework");
-            c = Class.forName("com.motorola.android.media.MediaRecorderExt");
-            Log.d(TAG, "Has Moto Framework");
-            return true;
-
-        } catch (ClassNotFoundException|NullPointerException|UnsatisfiedLinkError | ExceptionInInitializerError e) {
-            Log.d(TAG, "No Moto Framework");
-            return false;
-        }
-    }
-
-    private static boolean isMTKDevice()
-    {
-        try
-        {
-            Class camera = Class.forName("android.hardware.Camera");
-            Method[] meths = camera.getMethods();
-            Method app = null;
-            for (Method m : meths)
-            {
-                if (m.getName().equals("setProperty"))
-                    app = m;
-            }
-            if (app != null) {
-                Log.d(TAG,"MTK Framework found");
-                return true;
-            }
-            Log.d(TAG, "MTK Framework not found");
-            return false;
-        }
-        catch (ClassNotFoundException|NullPointerException|UnsatisfiedLinkError | ExceptionInInitializerError e)
-        {
-            Log.WriteEx(e);
-            Log.d(TAG, "MTK Framework not found");
-            return false;
-        }
-    }
-
-    public static int getFramework()
-    {
-        if (hasLGFramework())
-            return SettingsManager.FRAMEWORK_LG;
-        else if (isMTKDevice())
-            return SettingsManager.FRAMEWORK_MTK;
-        else if (isMotoExt())
-            return SettingsManager.FRAMEWORK_MOTO_EXT;
-        else
-            return SettingsManager.FRAMEWORK_NORMAL;
-    }
 
     private boolean canOpenLegacy()
     {
@@ -1029,7 +976,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
         Camera camera = null;
         switch (SettingsManager.getInstance().getFrameWork())
         {
-            case SettingsManager.FRAMEWORK_LG:
+            case LG:
             {
                 Log.d(TAG,"Open LG Camera");
                 LGCameraRef lgCamera;
@@ -1039,7 +986,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
                     lgCamera = new LGCameraRef(currentcamera);
                 return lgCamera.getParameters();
             }
-            case SettingsManager.FRAMEWORK_MOTO_EXT:
+            case Moto_Ext:
             {
                 Log.d(TAG,"Open MOTO Camera");
                 camera  = Camera.open(currentcamera);
@@ -1050,7 +997,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
                 camera.release();
                 return parameters;
             }
-            case SettingsManager.FRAMEWORK_MTK:
+            case MTK:
             {
                 Log.d(TAG,"Open MTK Camera");
                 CameraHolderMTK.setMtkAppMode();
@@ -1120,7 +1067,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
             SettingsManager.get(SettingKeys.RAW_PICTURE_FORMAT_SETTING).setIsSupported(false);
         }
         else {
-            if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK) {
+            if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK) {
                 SettingsManager.get(SettingKeys.PictureFormat).setIsSupported(true);
                 SettingsManager.get(SettingKeys.RAW_PICTURE_FORMAT_SETTING).setIsSupported(true);
             } else {
@@ -1402,7 +1349,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
                     SettingsManager.get(SettingKeys.VideoHighFramerate).setIsSupported(false);
             }
         }
-        else if (SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_MTK)
+        else if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK)
         {
             if (parameters.get("hsvr-prv-fps-values") != null)
             {
@@ -1441,7 +1388,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
         final String _2160p = "2160p";
         final String _2160pDCI = "2160pDCI";
         HashMap<String,VideoMediaProfile> supportedProfiles;
-        if(SettingsManager.getInstance().getFrameWork() == SettingsManager.FRAMEWORK_LG)
+        if(SettingsManager.getInstance().getFrameWork() == Frameworks.LG)
             supportedProfiles =  getLGVideoMediaProfiles(cameraid);
         else
             supportedProfiles= getDefaultVideoMediaProfiles(cameraid);
