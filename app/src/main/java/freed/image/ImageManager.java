@@ -64,16 +64,11 @@ public class ImageManager {
         private final ThreadPoolExecutor imageSaveExecutor;
 
         private ImageSaveManager() {
-            int coresize = Runtime.getRuntime().availableProcessors()/2;
-            if (coresize>4)
-                coresize = 4;
-            if (coresize == 0)
-                coresize = 1;
-            imagesToSaveQueue = new ArrayBlockingQueue<Runnable>(coresize);
+            imagesToSaveQueue = new ArrayBlockingQueue<Runnable>(4);
 
             imageSaveExecutor = new ThreadPoolExecutor(
-                    coresize,       // Initial pool size
-                    coresize,       // Max pool size
+                    4,       // Initial pool size
+                    4,       // Max pool size
                     KEEP_ALIVE_TIME,
                     TimeUnit.MILLISECONDS,
                     imagesToSaveQueue);

@@ -358,27 +358,28 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
             if (SettingsManager.getInstance().getFrameWork() == Frameworks.MTK) {
                 SettingsManager.get(SettingKeys.M_ManualIso).setIsSupported(true);
                 SettingsManager.get(SettingKeys.M_ManualIso).setKEY("m-sr-g");
-                SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(100, 1600, 100,false));
+                SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(100, 1600, 100));
                 SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_MTK);
             }
             else {
                 if (parameters.get(SettingsManager.getInstance().getResString(R.string.min_iso)) != null && parameters.get(SettingsManager.getInstance().getResString(R.string.max_iso)) != null) {
                     SettingsManager.get(SettingKeys.M_ManualIso).setIsSupported(true);
 
-                    int min = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.min_iso)));
-                    int max = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.max_iso)));
                     if (SettingsManager.getInstance().getFrameWork() == Frameworks.Xiaomi)
                     {
                         SettingsManager.get(SettingKeys.M_ManualIso).setKEY(SettingsManager.getInstance().getResString(R.string.iso));
                         SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_Xiaomi);
-                        SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(min, max, 50,true));
                     }
                     else
                     {
                         SettingsManager.get(SettingKeys.M_ManualIso).setKEY(SettingsManager.getInstance().getResString(R.string.continuous_iso));
                         SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_QCOM);
-                        SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(min, max, 50,false));
                     }
+
+                    int min = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.min_iso)));
+                    int max = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.max_iso)));
+                    SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(min, max, 50));
+
                 }
                 else if (parameters.get(SettingsManager.getInstance().getResString(R.string.hw_sensor_iso_range))!= null)
                 {
@@ -386,13 +387,13 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
                     String t[] = parameters.get(SettingsManager.getInstance().getResString(R.string.hw_sensor_iso_range)).split(",");
                     int min = Integer.parseInt(t[0]);
                     int max = Integer.parseInt(t[1]);
-                    SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(min, max, 50,false));
+                    SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(min, max, 50));
                     SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_KRILLIN);
                     SettingsManager.get(SettingKeys.M_ManualIso).setKEY(SettingsManager.getInstance().getResString(R.string.hw_sensor_iso));
                 }
                 else if (parameters.get(SettingsManager.getInstance().getResString(R.string.lg_iso)) != null) {
                     SettingsManager.get(SettingKeys.M_ManualIso).setIsSupported(true);
-                    SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(0, 2700, 50,false));
+                    SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(0, 2700, 50));
                     SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_LG);
                     SettingsManager.get(SettingKeys.M_ManualIso).setKEY(SettingsManager.getInstance().getResString(R.string.lg_iso));
                 }
@@ -400,17 +401,14 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
         }
     }
 
-    public static String[] createIsoValues(int miniso, int maxiso, int step, boolean xiaomi)
+    public static String[] createIsoValues(int miniso, int maxiso, int step)
     {
         Log.d(TAG,"Create Isovalues");
         ArrayList<String> s = new ArrayList<>();
         s.add(SettingsManager.getInstance().getResString(R.string.auto_));
         for (int i =miniso; i <= maxiso; i +=step)
         {
-            if (xiaomi)
-                s.add("ISO"+i);
-            else
-                s.add(i + "");
+            s.add(i + "");
         }
         String[] stringvalues = new String[s.size()];
         return s.toArray(stringvalues);
@@ -708,38 +706,32 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
             }
         }
         else {
-            try {
-                int min = 0, max = 0;
-                if (parameters.get(SettingsManager.getInstance().getResString(R.string.lg_color_adjust_max)) != null
-                        && parameters.get(SettingsManager.getInstance().getResString(R.string.lg_color_adjust_min)) != null) {
-                    Log.d(TAG, "Saturation: LG");
-                    min = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.lg_color_adjust_min)));
-                    max = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.lg_color_adjust_max)));
-                    SettingsManager.get(SettingKeys.M_Saturation).setKEY(SettingsManager.getInstance().getResString(R.string.lg_color_adjust));
-                    SettingsManager.get(SettingKeys.M_Saturation).set(parameters.get(camstring(R.string.lg_color_adjust)));
-                } else if (parameters.get(camstring(R.string.saturation_max)) != null) {
-                    Log.d(TAG, "Saturation: Default");
-                    min = Integer.parseInt(parameters.get(camstring(R.string.saturation_min)));
-                    max = Integer.parseInt(parameters.get(camstring(R.string.saturation_max)));
-                    SettingsManager.get(SettingKeys.M_Saturation).setKEY(camstring(R.string.saturation));
-                    SettingsManager.get(SettingKeys.M_Saturation).set(parameters.get(camstring(R.string.saturation)));
-                } else if (parameters.get(camstring(R.string.max_saturation)) != null && parameters.get(camstring(R.string.min_saturation)) != null) {
-                    Log.d(TAG, "Saturation: Default");
-                    min = Integer.parseInt(parameters.get(camstring(R.string.min_saturation)));
-                    max = Integer.parseInt(parameters.get(camstring(R.string.max_saturation)));
-                    SettingsManager.get(SettingKeys.M_Saturation).setKEY(camstring(R.string.saturation));
-                    SettingsManager.get(SettingKeys.M_Saturation).set(parameters.get(camstring(R.string.saturation)));
-                }
-                Log.d(TAG, "Saturation Max:" + max);
-                if (max > 0) {
-                    SettingsManager.get(SettingKeys.M_Saturation).setValues(createStringArray(min, max, 1));
-                    SettingsManager.get(SettingKeys.M_Saturation).setIsSupported(true);
-                }
+            int min = 0, max = 0;
+            if (parameters.get(SettingsManager.getInstance().getResString(R.string.lg_color_adjust_max)) != null
+                    && parameters.get(SettingsManager.getInstance().getResString(R.string.lg_color_adjust_min)) != null) {
+                Log.d(TAG, "Saturation: LG");
+                min = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.lg_color_adjust_min)));
+                max = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.lg_color_adjust_max)));
+                SettingsManager.get(SettingKeys.M_Saturation).setKEY(SettingsManager.getInstance().getResString(R.string.lg_color_adjust));
+                SettingsManager.get(SettingKeys.M_Saturation).set(parameters.get(camstring(R.string.lg_color_adjust)));
             }
-            catch (NumberFormatException ex)
-            {
-                Log.WriteEx(ex);
-                SettingsManager.get(SettingKeys.M_Saturation).setIsSupported(false);
+            else if (parameters.get(camstring(R.string.saturation_max)) != null) {
+                Log.d(TAG, "Saturation: Default");
+                min = Integer.parseInt(parameters.get(camstring(R.string.saturation_min)));
+                max = Integer.parseInt(parameters.get(camstring(R.string.saturation_max)));
+                SettingsManager.get(SettingKeys.M_Saturation).setKEY(camstring(R.string.saturation));
+                SettingsManager.get(SettingKeys.M_Saturation).set(parameters.get(camstring(R.string.saturation)));
+            } else if (parameters.get(camstring(R.string.max_saturation)) != null) {
+                Log.d(TAG, "Saturation: Default");
+                min = Integer.parseInt(parameters.get(camstring(R.string.min_saturation)));
+                max = Integer.parseInt(parameters.get(camstring(R.string.max_saturation)));
+                SettingsManager.get(SettingKeys.M_Saturation).setKEY(camstring(R.string.saturation));
+                SettingsManager.get(SettingKeys.M_Saturation).set(parameters.get(camstring(R.string.saturation)));
+            }
+            Log.d(TAG, "Saturation Max:" +max);
+            if (max > 0) {
+                SettingsManager.get(SettingKeys.M_Saturation).setValues(createStringArray(min, max, 1));
+                SettingsManager.get(SettingKeys.M_Saturation).setIsSupported(true);
             }
         }
     }
