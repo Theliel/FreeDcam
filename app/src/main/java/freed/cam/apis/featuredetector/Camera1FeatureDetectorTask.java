@@ -369,9 +369,7 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
                     int max = Integer.parseInt(parameters.get(SettingsManager.getInstance().getResString(R.string.max_iso)));
                     if (SettingsManager.getInstance().getFrameWork() == Frameworks.Xiaomi)
                     {
-                        SettingsManager.get(SettingKeys.M_ManualIso).setKEY(SettingsManager.getInstance().getResString(R.string.iso));
-                        SettingsManager.get(SettingKeys.M_ManualIso).setType(SettingsManager.ISOMANUAL_Xiaomi);
-                        SettingsManager.get(SettingKeys.M_ManualIso).setValues(createIsoValues(min, max, 50,true));
+                        SettingsManager.get(SettingKeys.M_ManualIso).setIsSupported(false);
                     }
                     else
                     {
@@ -1303,8 +1301,8 @@ public class Camera1FeatureDetectorTask extends AbstractFeatureDetectorTask
             detectMode(parameters, R.string.zsd_mode, R.string.zsd_mode_values, SettingsManager.get(SettingKeys.ZSL));
         }
 
-        if (SettingsManager.get(SettingKeys.LensShade).getValues().length == 0)
-            SettingsManager.get(SettingKeys.LensShade).setIsSupported(false);
+        if (SettingsManager.get(SettingKeys.ZSL).getValues().length == 0)
+            SettingsManager.get(SettingKeys.ZSL).setIsSupported(false);
     }
 
     private void detectSceneDetectModes(Camera.Parameters parameters)
