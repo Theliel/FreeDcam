@@ -1,20 +1,17 @@
 #pragma version(1)
-    #pragma rs java_package_name(freed.utils)
+    #pragma rs java_package_name(freed.renderscript)
     #pragma rs_fp_relaxed
 
 rs_allocation gCurrentFrame;
 rs_allocation gLastFrame;
 rs_allocation medianStackMIN;
 rs_allocation medianStackMAX;
-int32_t *histodataR;
-int32_t *histodataG;
-int32_t *histodataB;
+
 int Width;
 int Height;
 bool yuvinput;
 //BRIGHTNESS
 float brightness;
-bool processhisto;
 
 
 uchar4 __attribute__((kernel)) processBrightness(uint32_t x, uint32_t y) {
@@ -56,62 +53,6 @@ uchar4 __attribute__((kernel)) processContrast(uint32_t x, uint32_t y)
             o.a = 0xff;
             return o;
 }
-
-uchar4 __attribute__((kernel)) focuspeaksony(uint32_t x, uint32_t y) {
-    uchar4 curPixel;
-    curPixel = rsGetElementAt_uchar4(gCurrentFrame, x, y);
-
-    //set histo data
-        if(processhisto && x & 4 && y &4)
-        {
-            volatile int32_t *addr = &histodataR[curPixel.r];
-            rsAtomicInc(addr);
-            addr = &histodataG[curPixel.g];
-            rsAtomicInc(addr);
-            addr = &histodataB[curPixel.b];
-            rsAtomicInc(addr);
-        }
-    //rsDebug("CurPixel", curPixel);
-
-    int dx = x + ((x == 0) ? 1 : -1);
-    //rsDebug("dx", dx);
-    int sum = 0;
-    uchar4 tmpPix = rsGetElementAt_uchar4(gCurrentFrame, dx, y);
-    int tmp;
-    tmp = tmpPix.r - curPixel.r;
-    sum += tmp * tmp;
-    tmp = tmpPix.g - curPixel.g;
-    sum += tmp * tmp;
-    tmp = tmpPix.b - curPixel.b;
-    sum += tmp * tmp;
-
-    int dy = y + ((y == 0) ? 1 : -1);
-    tmpPix = rsGetElementAt_uchar4(gCurrentFrame, x, dy);
-    tmp = tmpPix.r - curPixel.r;
-    sum += tmp * tmp;
-    tmp = tmpPix.g - curPixel.g;
-    sum += tmp * tmp;
-    tmp = tmpPix.b - curPixel.b;
-    sum += tmp * tmp;
-
-    sum >>= 9;
-    sum *= sum * sum;
-    int4 rgb;
-    uchar4 mergedPixel = curPixel;
-    //rsDebug("curPixel", curPixel);
-    rgb.r = mergedPixel.r  + sum;
-    rgb.g = mergedPixel.g + sum;
-    rgb.b = mergedPixel.b + sum;
-    rgb.a = 255;
-    rgb.r = ( rgb.r > 255 )? 255 : (( rgb.r < 0 )? 0 : rgb.r);
-    rgb.g = ( rgb.g > 255 )? 255 : (( rgb.g < 0 )? 0 : rgb.g);
-    rgb.b = ( rgb.b > 255 )? 255 : (( rgb.b < 0 )? 0 : rgb.b);
-
-    //rsDebug("rgb", rgb);
-    uchar4 out = convert_uchar4(rgb);
-    return out;
-}
-
 
 //IMAGE STACK
 

@@ -43,16 +43,18 @@ public class PreviewSizeParameter extends BaseModeParameter
     {
         super.SetValue(valueToSet,setToCam);
         if (setToCam) {
-            cameraUiWrapper.stopPreview();
+            cameraUiWrapper.stopPreviewAsync();
         }
         parameters.set(key_value, valueToSet);
 
 
         Log.d(TAG, "setValue PreviewSizeParameters");
-        ((ParametersHandler) cameraUiWrapper.getParameterHandler()).SetParametersToCamera(parameters);
+
+
 
         if (setToCam) {
-            cameraUiWrapper.startPreview();
+            ((ParametersHandler) cameraUiWrapper.getParameterHandler()).SetParametersToCamera(parameters);
+            cameraUiWrapper.startPreviewAsync();
         }
     }
 

@@ -17,18 +17,23 @@
  * /
  */
 
-package freed.cam.apis.basecamera;
+package freed.renderscript;
 
 import android.view.Surface;
 
 /**
  * Created by troop on 12.06.2016.
  */
-public interface FocuspeakProcessor
+public interface RenderScriptProcessorInterface
 {
     boolean isEnabled();
     //api1
-    void Enable(boolean enable);
+    void setFocusPeakEnable(boolean enable);
+    void setHistogramEnable(boolean enable);
+    void setClippingEnable(boolean enable);
+    void setBlue(boolean blue);
+    void setRed(boolean red);
+    void setGreen(boolean green);
     void SetAspectRatio(int w, int h);
 
     //api2

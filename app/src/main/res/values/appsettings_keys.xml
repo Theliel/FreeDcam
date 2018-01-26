@@ -110,11 +110,15 @@
     <string name="aps_contshootmodespeed" translatable="false">contshootmodespeed</string>
     <string name="aps_contshootmode" translatable="false">contshootmode</string>
     <string name="aps_focuspeak" translatable="false">focuspeak</string>
+    <string name="aps_histogram" translatable="false">histogram</string>
+    <string name="aps_clipping" translatable="false">clipping</string>
+    <string name="aps_enable_renderscript" translatable="false">enable_renderscript</string>
     <string name="aps_nightoverlay" translatable="false">nightoverlay</string>
     <string name="aps_colorcorrectionmode" translatable="false">colorcorrectionmode</string>
     <string name="aps_tonecurve" translatable="false">tonecurve</string>
     <string name="aps_location" translatable="false">location</string>
     <string name="aps_bayformat" translatable="false">bayerformat</string>
     <string name="aps_touchtocapture" translatable="false">touchtocapture</string>
+    <string name="aps_focuspeakcolor" translatable="false">focuspeakcolor</string>
 
 </resources>

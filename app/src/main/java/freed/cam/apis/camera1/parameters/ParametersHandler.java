@@ -32,9 +32,10 @@ import java.util.List;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.basecamera.modules.ModuleChangedEvent;
 import freed.cam.apis.basecamera.parameters.AbstractParameterHandler;
+import freed.cam.apis.basecamera.parameters.modes.FocusPeakMode;
+import freed.cam.apis.basecamera.parameters.modes.HistogramParameter;
 import freed.cam.apis.basecamera.parameters.modes.MatrixChooserParameter;
 import freed.cam.apis.basecamera.parameters.modes.ModuleParameters;
-import freed.cam.apis.camera1.Camera1Fragment;
 import freed.cam.apis.camera1.CameraHolder;
 import freed.cam.apis.camera1.FocusHandler;
 import freed.cam.apis.camera1.parameters.ae.AeManagerLgCamera1;
@@ -64,13 +65,11 @@ import freed.cam.apis.camera1.parameters.manual.zte.FXManualParameter;
 import freed.cam.apis.camera1.parameters.modes.AutoHdrMode;
 import freed.cam.apis.camera1.parameters.modes.BaseModeParameter;
 import freed.cam.apis.camera1.parameters.modes.ExposureLockParameter;
-import freed.cam.apis.camera1.parameters.modes.FocusPeakModeParameter;
 import freed.cam.apis.camera1.parameters.modes.LgHdrMode;
 import freed.cam.apis.camera1.parameters.modes.MotoHDR;
 import freed.cam.apis.camera1.parameters.modes.NightModeZTE;
 import freed.cam.apis.camera1.parameters.modes.OpCodeParameter;
 import freed.cam.apis.camera1.parameters.modes.PictureFormatHandler;
-import freed.cam.apis.camera1.parameters.modes.PictureSizeParameter;
 import freed.cam.apis.camera1.parameters.modes.PreviewFpsParameter;
 import freed.cam.apis.camera1.parameters.modes.PreviewSizeParameter;
 import freed.cam.apis.camera1.parameters.modes.VideoProfilesParameter;
@@ -327,7 +326,7 @@ public class ParametersHandler extends AbstractParameterHandler
 
         add(SettingKeys.ExposureLock, new ExposureLockParameter(cameraParameters, cameraUiWrapper));
 
-        add(SettingKeys.Focuspeak, new FocusPeakModeParameter(cameraUiWrapper,((Camera1Fragment) cameraUiWrapper).focusPeakProcessorAp1));
+
 
         SetCameraRotation();
 
@@ -519,6 +518,8 @@ public class ParametersHandler extends AbstractParameterHandler
     @Override
     public void SetPictureOrientation(int orientation)
     {
+        if (cameraParameters == null)
+            return;
         if (SettingsManager.get(SettingKeys.orientationHack).get())
         {
             int or = orientation +180;
@@ -526,6 +527,7 @@ public class ParametersHandler extends AbstractParameterHandler
                 or = or - 360;
             orientation = or;
         }
+
 
         cameraParameters.setRotation(orientation);
         Log.d(TAG, "SetPictureOrientation");
@@ -654,8 +656,8 @@ public class ParametersHandler extends AbstractParameterHandler
     public void SetZTE_RESET_AE_SETSHUTTER(String Shutter)
     {
         SetZTE_AE();
-        cameraUiWrapper.stopPreview();
-        cameraUiWrapper.startPreview();
+        cameraUiWrapper.stopPreviewAsync();
+        cameraUiWrapper.startPreviewAsync();
         cameraParameters.set("slow_shutter",Shutter);
         cameraParameters.set("slow_shutter_addition", "1");
         Log.d(TAG,"SetZTE_RESET_AE_SETSHUTTER");

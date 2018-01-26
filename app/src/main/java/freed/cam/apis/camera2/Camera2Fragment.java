@@ -20,12 +20,12 @@
 package freed.cam.apis.camera2;
 
 import android.annotation.TargetApi;
+import android.graphics.ImageFormat;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.HandlerThread;
-import android.os.Message;
 import android.util.Size;
 import android.view.LayoutInflater;
 import android.view.SurfaceView;
@@ -41,11 +41,10 @@ import java.util.Collections;
 import java.util.List;
 
 import freed.cam.apis.basecamera.CameraFragmentAbstract;
-import freed.cam.apis.basecamera.FocuspeakProcessor;
-import freed.cam.apis.basecamera.MainToCameraHandler;
 import freed.cam.apis.camera2.modules.I_PreviewWrapper;
 import freed.cam.apis.camera2.parameters.ParameterHandlerApi2;
-import freed.cam.apis.camera2.renderscript.FocuspeakProcessorApi2;
+import freed.renderscript.RenderScriptProcessor;
+import freed.renderscript.RenderScriptProcessorInterface;
 import freed.settings.SettingsManager;
 import freed.utils.Log;
 import freed.viewer.screenslide.MyHistogram;
@@ -65,7 +64,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
     private AutoFitTextureView textureView;
     private MyHistogram histogram;
     private final String TAG = Camera2Fragment.class.getSimpleName();
-    private FocuspeakProcessorApi2 mProcessor;
+    private RenderScriptProcessor mProcessor;
     private boolean cameraIsOpen = false;
     public CaptureSessionHandler captureSessionHandler;
     public CameraValuesChangedCaptureCallback cameraBackroundValuesChangedListner;
@@ -90,7 +89,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
         super.onCreateView(inflater,container,savedInstanceState);
-        view = inflater.inflate(layout.cameraholder2, container, false);
+        view = inflater.inflate(layout.camerafragment, container, false);
         textureView = (AutoFitTextureView) view.findViewById(id.autofitview);
         this.textureView.setSurfaceTextureListener(this);
         this.histogram = (MyHistogram)view.findViewById(id.hisotview);
@@ -108,22 +107,27 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
         super.onResume();
         Log.d(TAG, "onResume");
         if (textureView.isAttachedToWindow() && PreviewSurfaceRdy)
-            startCamera();
+            startCameraAsync();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         Log.d(TAG, "onPause");
-        stopPreview();
-        stopCamera();
+        stopPreviewAsync();
+        stopCameraAsync();
     }
 
     @Override
-    public void onCameraOpen(final String message)
+    public void onCameraOpen()
     {
         Log.d(TAG, "onCameraOpen, initCamera");
         mainToCameraHandler.initCamera();
+    }
+
+    @Override
+    public void onCameraOpenFinish() {
+
     }
 
     @Override
@@ -132,7 +136,6 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
         Log.d(TAG, "onCameraClose");
         cameraIsOpen = false;
         mProcessor.kill();
-        super.onCameraClose(message);
     }
 
     @Override
@@ -146,13 +149,18 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
     }
 
     @Override
+    public void onCameraError(String error) {
+
+    }
+
+    @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
     {
         Log.d(TAG, "SurfaceTextureAvailable");
         if (!PreviewSurfaceRdy) {
             PreviewSurfaceRdy = true;
             if (!cameraIsOpen && isResumed())
-                startCamera();
+                startCameraAsync();
         }
     }
 
@@ -200,7 +208,7 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
     }
 
     @Override
-    public FocuspeakProcessor getFocusPeakProcessor() {
+    public RenderScriptProcessorInterface getFocusPeakProcessor() {
         return mProcessor;
     }
 
@@ -214,67 +222,6 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
         return null;
     }
 
-    @Override
-    public void handelCameraMessage(Message message) {
-        switch (message.what)
-        {
-            case MainToCameraHandler.MSG_START_CAMERA:
-                if (!cameraIsOpen) {
-                    Log.d(TAG, "Start Camera");
-                    cameraIsOpen = cameraHolder.OpenCamera(SettingsManager.getInstance().GetCurrentCamera());
-                } else
-                    Log.d(TAG, "Camera is already open");
-                break;
-            case MainToCameraHandler.MSG_STOP_CAMERA:
-                Log.d(TAG, "Stop Camera");
-                captureSessionHandler.Clear();
-                cameraHolder.CloseCamera();
-                cameraIsOpen = false;
-                break;
-            case MainToCameraHandler.MSG_RESTART_CAMERA:
-                Log.d(TAG, "Restart Camera");
-                cameraHolder.CloseCamera();
-                cameraIsOpen = false;
-                if (!cameraIsOpen)
-                    cameraIsOpen = cameraHolder.OpenCamera(SettingsManager.getInstance().GetCurrentCamera());
-                break;
-            case MainToCameraHandler.MSG_START_PREVIEW:
-                Log.d(TAG, "Start Preview");
-                I_PreviewWrapper mi = ((I_PreviewWrapper) moduleHandler.getCurrentModule());
-                if (mi != null) {
-                    mi.startPreview();
-                }
-                break;
-            case MainToCameraHandler.MSG_STOP_PREVIEW:
-                Log.d(TAG, "Stop Preview");
-                mi = ((I_PreviewWrapper) moduleHandler.getCurrentModule());
-                if (mi != null) {
-                    mi.stopPreview();
-                }
-                break;
-            case MainToCameraHandler.MSG_INIT_CAMERA:
-                Log.d(TAG,"Init Camera");
-                captureSessionHandler.CreatePreviewRequestBuilder();
-                ((ParameterHandlerApi2)parametersHandler).Init();
-                ((CameraHolderApi2)cameraHolder).SetSurface(textureView);
-                Log.d(TAG, "Camera Opened and Preview Started");
-                Camera2Fragment.super.onCameraOpen("");
-                moduleHandler.setModule(SettingsManager.getInstance().GetCurrentModule());
-                Camera2Fragment.this.onCameraOpenFinish("");
-                break;
-            case MainToCameraHandler.MSG_CREATE_CAMERA:
-                parametersHandler = new ParameterHandlerApi2(Camera2Fragment.this);
-                moduleHandler = new ModuleHandlerApi2(Camera2Fragment.this);
-                Focus = new FocusHandler(Camera2Fragment.this);
-                cameraHolder = new CameraHolderApi2(Camera2Fragment.this);
-                cameraBackroundValuesChangedListner = new CameraValuesChangedCaptureCallback(this);
-                cameraBackroundValuesChangedListner.setWaitForFirstFrameCallback(this);
-                captureSessionHandler = new CaptureSessionHandler(Camera2Fragment.this, cameraBackroundValuesChangedListner);
-                mProcessor = new FocuspeakProcessorApi2(renderScriptManager,histogram);
-                break;
-        }
-
-    }
 
     @Override
     public void onFirstFrame() {
@@ -314,5 +261,73 @@ public class Camera2Fragment extends CameraFragmentAbstract implements TextureVi
             return true;
         else
             return false;
+    }
+
+    @Override
+    public void createCamera() {
+        mProcessor = new RenderScriptProcessor(renderScriptManager,histogram, ImageFormat.YUV_420_888);
+        parametersHandler = new ParameterHandlerApi2(Camera2Fragment.this);
+        moduleHandler = new ModuleHandlerApi2(Camera2Fragment.this);
+        Focus = new FocusHandler(Camera2Fragment.this);
+        cameraHolder = new CameraHolderApi2(Camera2Fragment.this);
+        cameraBackroundValuesChangedListner = new CameraValuesChangedCaptureCallback(this);
+        cameraBackroundValuesChangedListner.setWaitForFirstFrameCallback(this);
+        captureSessionHandler = new CaptureSessionHandler(Camera2Fragment.this, cameraBackroundValuesChangedListner);
+    }
+
+    @Override
+    public void initCamera() {
+        Log.d(TAG,"Init Camera");
+        captureSessionHandler.CreatePreviewRequestBuilder();
+        ((ParameterHandlerApi2)parametersHandler).Init();
+        ((CameraHolderApi2)cameraHolder).SetSurface(textureView);
+        Log.d(TAG, "Camera Opened and Preview Started");
+        //Camera2Fragment.this.fireCameraOpen();
+        moduleHandler.setModule(SettingsManager.getInstance().GetCurrentModule());
+        Camera2Fragment.this.fireCameraOpenFinished();
+    }
+
+    @Override
+    public void startCamera() {
+        if (!cameraIsOpen) {
+            Log.d(TAG, "Start Camera");
+            cameraIsOpen = cameraHolder.OpenCamera(SettingsManager.getInstance().GetCurrentCamera());
+        } else
+            Log.d(TAG, "Camera is already open");
+    }
+
+    @Override
+    public void stopCamera() {
+        Log.d(TAG, "Stop Camera");
+        captureSessionHandler.Clear();
+        cameraHolder.CloseCamera();
+        cameraIsOpen = false;
+    }
+
+    @Override
+    public void restartCamera() {
+        Log.d(TAG, "Restart Camera");
+        cameraHolder.CloseCamera();
+        cameraIsOpen = false;
+        if (!cameraIsOpen)
+            cameraIsOpen = cameraHolder.OpenCamera(SettingsManager.getInstance().GetCurrentCamera());
+    }
+
+    @Override
+    public void startPreview() {
+        Log.d(TAG, "Start Preview");
+        I_PreviewWrapper mi = ((I_PreviewWrapper) moduleHandler.getCurrentModule());
+        if (mi != null) {
+            mi.startPreview();
+        }
+    }
+
+    @Override
+    public void stopPreview() {
+        Log.d(TAG, "Stop Preview");
+        I_PreviewWrapper mi = ((I_PreviewWrapper) moduleHandler.getCurrentModule());
+        if (mi != null) {
+            mi.stopPreview();
+        }
     }
 }

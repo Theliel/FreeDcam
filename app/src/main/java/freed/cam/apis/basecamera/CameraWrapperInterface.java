@@ -26,7 +26,8 @@ import android.view.SurfaceView;
 import freed.ActivityInterface;
 import freed.cam.apis.basecamera.modules.ModuleHandlerAbstract;
 import freed.cam.apis.basecamera.parameters.AbstractParameterHandler;
-import freed.utils.RenderScriptManager;
+import freed.renderscript.RenderScriptManager;
+import freed.renderscript.RenderScriptProcessorInterface;
 
 /**
  * Created by troop on 09.12.2014.
@@ -36,16 +37,19 @@ public interface CameraWrapperInterface extends CameraStateEvents
     /**
      * Start the Camera
      */
-    void startCamera();
+    void startCameraAsync();
 
     /**
      * Stop the Camera
      */
-    void stopCamera();
-    void restartCamera();
+    void stopCameraAsync();
+    void restartCameraAsync();
 
-    void startPreview();
-    void stopPreview();
+    void startPreviewAsync();
+    void stopPreviewAsync();
+
+    /*void initCamera();
+    void createCamera();*/
 
     /**
      * Get the current active CameraHolderSony
@@ -67,7 +71,7 @@ public interface CameraWrapperInterface extends CameraStateEvents
      * set the listner that get notifyed when camera state has changed
      * @param cameraChangedListner to notify
      */
-    void setCameraStateChangedListner(CameraStateEvents cameraChangedListner);
+    void setCameraEventListner(CameraStateEvents cameraChangedListner);
 
 
     /**
@@ -100,7 +104,7 @@ public interface CameraWrapperInterface extends CameraStateEvents
 
     Context getContext();
 
-    FocuspeakProcessor getFocusPeakProcessor();
+    RenderScriptProcessorInterface getFocusPeakProcessor();
 
     RenderScriptManager getRenderScriptManager();
 
@@ -109,5 +113,12 @@ public interface CameraWrapperInterface extends CameraStateEvents
     String getResString(int id);
 
     HandlerThread getCameraHandlerThread();
+
+    void fireCameraOpen();
+    void fireCameraOpenFinished();
+    void fireCameraClose();
+    void firePreviewClose();
+    void firePreviewOpen();
+    void fireCameraError(String msg);
 
 }

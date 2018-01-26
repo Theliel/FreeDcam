@@ -10,8 +10,8 @@ import java.util.List;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.settings.SettingKeys;
-import freed.settings.mode.SettingMode;
 import freed.settings.SettingsManager;
+import freed.settings.mode.SettingMode;
 
 /**
  * Created by troop on 18.06.2017.
@@ -69,6 +69,7 @@ public abstract class AbstractParameter implements ParameterInterface {
             stringvalues = settingMode.getValues();
             isSupported = settingMode.isSupported();
             isVisible = isSupported;
+            currentString = settingMode.get();
         }
     }
 

@@ -424,7 +424,7 @@ public class CaptureSessionHandler
     {
         if (mPreviewRequestBuilder == null )
             return;
-        Log.d(TAG, "Set :" + key.getName() + " to " + value);
+        //Log.d(TAG, "Set :" + key.getName() + " to " + value);
         mPreviewRequestBuilder.set(key,value);
         if (mImageCaptureRequestBuilder != null)
             mImageCaptureRequestBuilder.set(key,value);
@@ -513,68 +513,90 @@ public class CaptureSessionHandler
         return mImageCaptureRequestBuilder.get(key);
     }
 
-    public void SetTextureViewSize(int w, int h, int orientation, int orientationWithHack,boolean video)
+    public void SetTextureViewSize(int w, int h, int orientation, int orientationWithHack,boolean renderscript)
     {
         Matrix matrix = new Matrix();
+        matrix.reset();
         RectF inputRect = new RectF(0, 0, w, h);
-        float xof = displaySize.x - inputRect.width();
-        float yof = displaySize.y - inputRect.height();
-        Log.d(TAG,"Video:"+video);
         Log.d(TAG, "PreviewSize:" + w +"x"+ h);
         Log.d(TAG,"DisplaySize:" + displaySize.x +"x"+ displaySize.y);
-        Log.d(TAG, "margine x:" + xof +" margine y:" + yof);
-        RectF viewRect = new RectF(0, 0, displaySize.x, displaySize.y);
 
+        float dispWidth = 0;
+        float dispHeight = 0;
+        if (renderscript)
+        {
+            dispWidth = cameraHolderApi2.textureView.getWidth();
+            dispHeight = cameraHolderApi2.textureView.getHeight();
+        }
+        else if (displaySize.x > displaySize.y) {
+            dispWidth = displaySize.x;
+            dispHeight = displaySize.y;
+        }
+        else
+        {
+            dispWidth = displaySize.y;
+            dispHeight = displaySize.x;
+        }
 
-        Log.d(TAG, "finalsize: " + viewRect.width()+"x"+viewRect.height());
+        float viewRatio = dispWidth / dispHeight;
+        float inputRatio = (float)inputRect.width()/inputRect.height();
 
+        RectF viewRect = new RectF(0, 0, dispWidth, dispHeight);
 
         float centerX = viewRect.centerX();
         float centerY = viewRect.centerY();
-        if (orientation == 90|| orientation == 270) {
 
-            /**
-             * input is like that when holding device in landscape
-             *
-             *   ________
-             *   |      |                               _____________________
-             *   |      |                               |                   |
-             *   |      |  need to get transformed to:  |                   | viewrect
-             *   |      |                               |___________________|
-             *   ________
-             */
-            inputRect = new RectF(0, 0, w, h);
-            //center input relative to viewrect
-            inputRect.offset(centerX - inputRect.centerX(), centerY - inputRect.centerY());
+        /**
+         * input is like that when holding device in landscape
+         *
+         *   ________
+         *   |      |                               _____________________
+         *   |      |                               |                   |
+         *   |      |  need to get transformed to:  |                   | viewrect
+         *   |      |                               |___________________|
+         *   ________
+         */
 
-
-            //set the rectangles for the matrix rotation and scale(inputRect is the startpostion in portrait, viewRect is the end postion landscape)
-            matrix.setRectToRect(inputRect, viewRect, Matrix.ScaleToFit.FILL);
-            cameraHolderApi2.textureView.setAspectRatio((int)inputRect.width(), (int)inputRect.height());
+        inputRect.offset(centerX - inputRect.centerX(), centerY - inputRect.centerY());
+        if (!renderscript)
+            matrix.setRectToRect(inputRect,viewRect, Matrix.ScaleToFit.CENTER);
+        else
+            matrix.setRectToRect(inputRect,viewRect, Matrix.ScaleToFit.FILL);
 
 
-            //get scalefactor for the height from portrait to landscape
-            float scY = inputRect.width() / viewRect.height();
-            //get scalefactor for the width from portrait to landscape;
-            float scX = inputRect.height() / viewRect.width();
-
-            matrix.postScale(scX,scY,centerX,centerY);
-
-            if (SettingsManager.get(SettingKeys.orientationHack).get())
-                matrix.postRotate(orientationWithHack, centerX, centerY);
-            else
-                matrix.postRotate(orientation, centerX,centerY);
-
+        float scaleX;
+        float scaleY;
+        if (renderscript)
+        {
+            //renderscript has already set the width and height due the Allocation
+            //we have to use the real width and height from the Allocation
+            if (inputRatio == viewRatio)
+            {
+                scaleY = h / viewRect.height();
+                scaleX = w / viewRect.width() ;
+            }
+            else {
+                Log.d(TAG, "rs viewRect > inputRect");
+                scaleY = w / viewRect.height();
+                scaleX = h / viewRect.width();
+            }
         }
         else {
-            if (SettingsManager.get(SettingKeys.orientationHack).get()) {
-                if (orientationWithHack >= 360)
-                    orientationWithHack -= 180;
-                matrix.postRotate(orientationWithHack, inputRect.centerX(), inputRect.centerY());
+            if (inputRatio != viewRatio) {
+                Log.d(TAG, "viewRect > inputRect");
+                scaleY = inputRect.width() / viewRect.height();
+                scaleX = inputRect.height() / viewRect.width();
+            } else {
+                Log.d(TAG, "viewRect <= inputRect");
+                scaleY = inputRect.width() / viewRect.height();
+                scaleX = inputRect.height() / viewRect.width();
             }
-            cameraHolderApi2.textureView.setAspectRatio((int) inputRect.width(), (int) inputRect.height());
         }
+        Log.d(TAG,"scaleX:" +scaleX + " scaleY:" +scaleY);
 
+        matrix.postScale(scaleX, scaleY, centerX, centerY);
+
+        matrix.postRotate(orientation, centerX, centerY);
         cameraHolderApi2.textureView.setTransform(matrix);
     }
 

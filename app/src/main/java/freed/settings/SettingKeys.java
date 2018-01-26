@@ -90,7 +90,6 @@ public class SettingKeys{
     public final static Key<SettingMode> ContShootModeSpeed = new Key(SettingMode.class, R.string.aps_contshootmodespeed);
     public final static Key<SettingMode> ObjectTracking = new Key(SettingMode.class, R.string.aps_objecttracking);
     public final static Key<SettingMode> PostViewSize = new Key(SettingMode.class, R.string.aps_postviewsize);
-    public final static Key<SettingMode> Focuspeak = new Key(SettingMode.class, R.string.aps_focuspeak);
     public final static Key<SettingMode> Module = new Key(SettingMode.class, R.string.aps_module);
     public final static Key<SettingMode> ZoomSetting = new Key(SettingMode.class, R.string.aps_zoommode);
     public final static Key<SettingMode> dualPrimaryCameraMode = new Key(SettingMode.class, R.string.aps_dualprimarycameramode);
@@ -114,15 +113,14 @@ public class SettingKeys{
     public final static Key<SettingMode> RAW_PICTURE_FORMAT_SETTING = new Key(SettingMode.class, R.string.aps_rawpictureformat);
     public final static Key<SettingMode> selfTimer = new Key(SettingMode.class, R.string.aps_selftimer);
 
+    public final static Key<SettingMode> FOCUSPEAK_COLOR = new Key(SettingMode.class, R.string.aps_focuspeakcolor);
+
     public final static Key<TypedSettingMode> M_ManualIso = new Key(TypedSettingMode.class, R.string.aps_manualiso);
     public final static Key<TypedSettingMode> M_Whitebalance = new Key(TypedSettingMode.class, R.string.aps_manualwb);
     public final static Key<TypedSettingMode> M_Focus = new Key(TypedSettingMode.class, R.string.aps_manualfocus);
     public final static Key<TypedSettingMode> M_ExposureTime = new Key(TypedSettingMode.class, R.string.aps_manualexpotime);
     public final static Key<TypedSettingMode> NightMode = new Key(TypedSettingMode.class, R.string.aps_nightmode);
     public final static Key<TypedSettingMode> HDRMode = new Key(TypedSettingMode.class, R.string.aps_hdrmode);
-    //public final static Key<SettingMode> M_ToneCurve = new Key(SettingMode.class, R.string.aps_manual);
-
-    //public final static Key<GlobalBooleanSettingMode> useHuaweiCamera2Extension = new Key(GlobalBooleanSettingMode.class, R.string.aps_usehuaweicam2);
     public final static Key<GlobalBooleanSettingMode> needRestartAfterCapture = new Key(GlobalBooleanSettingMode.class, R.string.aps_needrestartaftercapture);
     public final static Key<GlobalBooleanSettingMode> forceRawToDng = new Key(GlobalBooleanSettingMode.class, R.string.aps_forcerawtondng);
     public final static Key<GlobalBooleanSettingMode> areFeaturesDetected = new Key(GlobalBooleanSettingMode.class, R.string.aps_arefeaturesdetected);
@@ -133,6 +131,13 @@ public class SettingKeys{
     public final static Key<ApiBooleanSettingMode> support12bitRaw = new Key(ApiBooleanSettingMode.class, R.string.aps_support12bitraw);
     public final static Key<ApiBooleanSettingMode> orientationHack = new Key(ApiBooleanSettingMode.class, R.string.aps_orientationHack);
     public final static Key<ApiBooleanSettingMode> openCamera1Legacy = new Key(ApiBooleanSettingMode.class, R.string.aps_opencamera1legacy);
+
+
+    //Renderscript
+    public final static Key<ApiBooleanSettingMode> EnableRenderScript = new Key(ApiBooleanSettingMode.class, R.string.aps_enable_renderscript);
+    public final static Key<SettingMode> Focuspeak = new Key(SettingMode.class, R.string.aps_focuspeak);
+    public final static Key<SettingMode> HISTOGRAM = new Key(SettingMode.class, R.string.aps_histogram);
+    public final static Key<SettingMode> CLIPPING = new Key(SettingMode.class, R.string.aps_histogram);
 
     /**
      *

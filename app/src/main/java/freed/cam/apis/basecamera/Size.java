@@ -24,8 +24,8 @@ package freed.cam.apis.basecamera;
  */
 public class Size
 {
-    public int width;
-    public int height;
+    public Integer width;
+    public Integer height;
     public Size(int w, int h)
     {
         height = h;
@@ -41,5 +41,6 @@ public class Size
         else
             new Size(1280,720);
     }
+
 
 }

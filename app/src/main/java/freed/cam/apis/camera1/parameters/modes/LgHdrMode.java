@@ -10,8 +10,8 @@ import java.util.List;
 import freed.cam.apis.basecamera.CameraWrapperInterface;
 import freed.cam.apis.camera1.parameters.ParametersHandler;
 import freed.settings.SettingKeys;
-import freed.settings.mode.SettingMode;
 import freed.settings.SettingsManager;
+import freed.settings.mode.SettingMode;
 
 /**
  * Created by troop on 24.02.2017.
@@ -46,7 +46,8 @@ public class LgHdrMode extends BaseModeParameter
             parameters.set(cameraUiWrapper.getResString(R.string.hdr_mode), 0);
         else if (valueToSet.equals(cameraUiWrapper.getResString(R.string.auto_)))
             parameters.set(cameraUiWrapper.getResString(R.string.hdr_mode), 2);
-        ((ParametersHandler) cameraUiWrapper.getParameterHandler()).SetParametersToCamera(parameters);
+        if (setToCam)
+            ((ParametersHandler) cameraUiWrapper.getParameterHandler()).SetParametersToCamera(parameters);
         ((SettingMode)SettingsManager.get(key)).set(valueToSet);
         fireStringValueChanged(valueToSet);
     }

@@ -21,10 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+import freed.renderscript.RenderScriptManager;
 import freed.settings.Frameworks;
 import freed.settings.SettingKeys;
-import freed.settings.mode.SettingMode;
 import freed.settings.SettingsManager;
+import freed.settings.mode.SettingMode;
 import freed.utils.Log;
 import freed.utils.StringFloatArray;
 import freed.utils.StringUtils;
@@ -76,19 +77,25 @@ public class Camera2FeatureDetectorTask extends AbstractFeatureDetectorTask {
                 SettingsManager.get(SettingKeys.selfTimer).setValues(SettingsManager.getInstance().getResources().getStringArray(R.array.selftimervalues));
                 SettingsManager.get(SettingKeys.selfTimer).set(SettingsManager.get(SettingKeys.selfTimer).getValues()[0]);
 
+                if (RenderScriptManager.isSupported()) {
+                    SettingsManager.get(SettingKeys.FOCUSPEAK_COLOR).setValues(SettingsManager.getInstance().getResources().getStringArray(R.array.focuspeakColors));
+                    SettingsManager.get(SettingKeys.FOCUSPEAK_COLOR).set(SettingsManager.get(SettingKeys.FOCUSPEAK_COLOR).getValues()[0]);
+                    SettingsManager.get(SettingKeys.FOCUSPEAK_COLOR).setIsSupported(true);
+                }
+
                 publishProgress("Camera 2 Level:" + hwlvl);
 
                 //check first if a already checked cam have camera2features and if its now the front cam that dont have a camera2feature.
                 //in that case set it to true
                 //else it would override the already detected featureset from last cam and disable api2
-                if (SettingsManager.getInstance().hasCamera2Features() && front && hwlvl == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY) {
+                if (SettingsManager.getInstance().hasCamera2Features() && front) {
                     hasCamera2Features = true;
                     Log.d(TAG,"Front cam has no camera2 featureset, try to find supported things anyway");
                 }
-                else if (hwlvl != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY)
-                    hasCamera2Features = true;
+               /* else if (hwlvl != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY)
+                    hasCamera2Features = true;*/
                 else
-                    hasCamera2Features = false;
+                    hasCamera2Features = true;
 
                 SettingsManager.getInstance().setHasCamera2Features(hasCamera2Features);
                 publishProgress("IsCamera2 Full Device:" + SettingsManager.getInstance().hasCamera2Features() + " isFront:" + SettingsManager.getInstance().getIsFrontCamera());
@@ -684,7 +691,7 @@ public class Camera2FeatureDetectorTask extends AbstractFeatureDetectorTask {
         if (scenes.length > 1)
             SettingsManager.get(SettingKeys.SceneMode).setIsSupported(true);
         else
-            return;
+            SettingsManager.get(SettingKeys.SceneMode).setIsSupported(false);
 
         HashMap<String,Integer> map = new HashMap<>();
         for (int i = 0; i< scenes.length; i++)
@@ -763,7 +770,7 @@ public class Camera2FeatureDetectorTask extends AbstractFeatureDetectorTask {
             if (scenes.length >0)
                 settingMode.setIsSupported(true);
             else
-                return;
+                settingMode.setIsSupported(false);
             String[] lookupar = SettingsManager.getInstance().getResources().getStringArray(ressourceArray);
             HashMap<String,Integer> map = new HashMap<>();
             for (int i = 0; i< scenes.length; i++)

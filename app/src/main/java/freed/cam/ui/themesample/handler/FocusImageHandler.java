@@ -259,6 +259,8 @@ public class FocusImageHandler extends AbstractFocusImageHandler
      */
     public void OnClick(int x, int y)
     {
+        if (wrapper == null || wrapper.getFocusHandler() == null)
+            return;
         int width = wrapper.getPreviewWidth() + recthalf;
         if (wrapper == null || wrapper.getFocusHandler() == null || !touchToFocusIsSupported
                 || x < wrapper.getMargineLeft() || x > width) {
@@ -267,6 +269,8 @@ public class FocusImageHandler extends AbstractFocusImageHandler
         }
         disWidth = wrapper.getPreviewWidth();
         disHeight = wrapper.getPreviewHeight();
+        x -= recthalf;
+        y -= recthalf;
 
         /*int marginLeft = wrapper.getMargineLeft();
         int marginRight = wrapper.getMargineRight();

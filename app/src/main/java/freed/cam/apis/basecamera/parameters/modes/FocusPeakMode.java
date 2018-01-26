@@ -17,21 +17,22 @@
  * /
  */
 
-package freed.cam.apis.camera2.parameters.modes;
+package freed.cam.apis.basecamera.parameters.modes;
 
-import android.annotation.TargetApi;
-import android.os.Build.VERSION_CODES;
 
 import com.troop.freedcam.R;
 
 import freed.cam.apis.basecamera.CameraWrapperInterface;
+import freed.cam.apis.basecamera.parameters.AbstractParameter;
+import freed.cam.apis.basecamera.parameters.ParameterEvents;
+import freed.renderscript.RenderScriptManager;
+import freed.settings.SettingsManager;
 
 /**
  * Created by troop on 10.09.2015.
  */
-@TargetApi(VERSION_CODES.LOLLIPOP)
-public class FocusPeakModeApi2 extends BaseModeApi2 {
-    public FocusPeakModeApi2(CameraWrapperInterface cameraUiWrapper)
+public class FocusPeakMode extends AbstractParameter implements ParameterEvents {
+    public FocusPeakMode(CameraWrapperInterface cameraUiWrapper)
     {
         super(cameraUiWrapper,null);
     }
@@ -40,7 +41,7 @@ public class FocusPeakModeApi2 extends BaseModeApi2 {
     @Override
     public boolean IsSupported()
     {
-        return true;//cameraHolder.characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL) != CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY;
+        return RenderScriptManager.isSupported() && cameraUiWrapper.getRenderScriptManager().isSucessfullLoaded();
     }
 
     @Override
@@ -53,12 +54,12 @@ public class FocusPeakModeApi2 extends BaseModeApi2 {
     {
         if (valueToSet.equals(cameraUiWrapper.getResString(R.string.on_)))
         {
-            cameraUiWrapper.getFocusPeakProcessor().Enable(true);
-            fireStringValueChanged(cameraUiWrapper.getResString(R.string.true_));
+            cameraUiWrapper.getFocusPeakProcessor().setFocusPeakEnable(true);
+            fireStringValueChanged(cameraUiWrapper.getResString(R.string.on_));
         }
         else {
-            cameraUiWrapper.getFocusPeakProcessor().Enable(false);
-            fireStringValueChanged(cameraUiWrapper.getResString(R.string.false_));
+            cameraUiWrapper.getFocusPeakProcessor().setFocusPeakEnable(false);
+            fireStringValueChanged(cameraUiWrapper.getResString(R.string.off_));
         }
 
     }
@@ -74,5 +75,33 @@ public class FocusPeakModeApi2 extends BaseModeApi2 {
     @Override
     public String[] getStringValues() {
         return new String[] {cameraUiWrapper.getResString(R.string.on_), cameraUiWrapper.getResString(R.string.off_)};
+    }
+
+    @Override
+    public void onIsSupportedChanged(boolean value) {
+
+    }
+
+    @Override
+    public void onIsSetSupportedChanged(boolean value) {
+
+    }
+
+    @Override
+    public void onIntValueChanged(int current) {
+
+    }
+
+    @Override
+    public void onValuesChanged(String[] values) {
+
+    }
+
+    @Override
+    public void onStringValueChanged(String value) {
+        if (value.equals(SettingsManager.getInstance().getResString(R.string.off_)))
+            fireIsSupportedChanged(false);
+        else
+            fireIsSupportedChanged(true);
     }
 }

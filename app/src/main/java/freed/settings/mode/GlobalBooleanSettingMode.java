@@ -1,13 +1,12 @@
 package freed.settings.mode;
 
 import freed.settings.SettingsManagerInterface;
-import freed.settings.mode.AbstractSettingMode;
 
 /**
  * Created by KillerInk on 04.01.2018.
  */
 
-public class GlobalBooleanSettingMode extends AbstractSettingMode {
+public class GlobalBooleanSettingMode extends AbstractSettingMode implements BooleanSettingModeInterface {
     public GlobalBooleanSettingMode(SettingsManagerInterface settingsManagerInterface, String key) {
         super(settingsManagerInterface, key);
     }

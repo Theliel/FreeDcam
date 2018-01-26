@@ -32,6 +32,8 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,11 +64,18 @@ public class CameraHolder extends CameraHolderAbstract
 
     public int CurrentCamera;
 
+    private Method setPreviewSurfaceMethod;
+
 
     public CameraHolder(CameraWrapperInterface cameraUiWrapper, Frameworks frameworks)
     {
         super(cameraUiWrapper);
         DeviceFrameWork = frameworks;
+        try {
+            setPreviewSurfaceMethod = Camera.class.getMethod("setPreviewSurface",Surface.class);
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -74,6 +83,11 @@ public class CameraHolder extends CameraHolderAbstract
     {
         Parameters p = mCamera.getParameters();
         return p.get(para);
+    }
+
+    public boolean canSetSurfaceDirect()
+    {
+        return setPreviewSurfaceMethod != null;
     }
 
     /**
@@ -95,7 +109,7 @@ public class CameraHolder extends CameraHolderAbstract
                 }
             });
             isRdy = true;
-            cameraUiWrapper.onCameraOpen("");
+            cameraUiWrapper.fireCameraOpen();
 
         } catch (Exception ex) {
             isRdy = false;
@@ -125,7 +139,7 @@ public class CameraHolder extends CameraHolderAbstract
             Log.d(TAG, "Camera closed");
         }
         isRdy = false;
-        cameraUiWrapper.onCameraClose("");
+        cameraUiWrapper.fireCameraClose();
     }
 
 
@@ -155,11 +169,15 @@ public class CameraHolder extends CameraHolderAbstract
     @Override
     public boolean SetSurface(SurfaceHolder surfaceHolder)
     {
+        Log.d(TAG, "setSurface surfaceholder");
         previewSurfaceHolder = surfaceHolder.getSurface();
         try
         {
             if (isRdy && mCamera != null) {
-                mCamera.setPreviewDisplay(surfaceHolder);
+                if (setPreviewSurfaceMethod != null)
+                    setPreviewSurfaceMethod.invoke(mCamera,surfaceHolder.getSurface());
+                else
+                    mCamera.setPreviewDisplay(surfaceHolder);
                 return true;
             }
         } catch (IOException ex) {
@@ -170,6 +188,34 @@ public class CameraHolder extends CameraHolderAbstract
         {
             Log.WriteEx(ex);
             return false;
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean SetSurface(Surface texture) {
+        Log.d(TAG, "setSurface surface");
+        try {
+            if (isRdy && mCamera != null) {
+                if (setPreviewSurfaceMethod != null) {
+                    setPreviewSurfaceMethod.setAccessible(true);
+                    setPreviewSurfaceMethod.invoke(mCamera, texture);
+                    setPreviewSurfaceMethod.setAccessible(false);
+                }
+                return true;
+            }
+        }
+        catch (NullPointerException ex)
+        {
+            Log.WriteEx(ex);
+        } catch (IllegalAccessException ex) {
+            Log.WriteEx(ex);
+        } catch (InvocationTargetException ex) {
+            Log.WriteEx(ex);
         }
         return false;
     }
@@ -192,7 +238,7 @@ public class CameraHolder extends CameraHolderAbstract
         {
             mCamera.startPreview();
             Log.d(TAG, "PreviewStarted");
-            cameraUiWrapper.onPreviewOpen("");
+            cameraUiWrapper.firePreviewOpen();
 
         } catch (Exception ex) {
             Log.WriteEx(ex);
@@ -203,13 +249,14 @@ public class CameraHolder extends CameraHolderAbstract
     @Override
     public void StopPreview()
     {
+        Log.d(TAG, "Stop Preview");
         if (mCamera == null)
             return;
         try {
             mCamera.setPreviewCallback(null);
             mCamera.stopPreview();
             Log.d(TAG, "Preview Stopped");
-            cameraUiWrapper.onPreviewClose("");
+            cameraUiWrapper.firePreviewClose();
 
         } catch (Exception ex)
         {
